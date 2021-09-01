@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup as bs4
 from requests_html import HTMLSession
+import re
 import json
 import pprint
 
@@ -13,22 +14,25 @@ status = r.status_code
 
 if status == 200:
 
-    with open('resuls.txt','w',encoding='utf-8') as f:
+    with open('result.html','w',encoding='utf-8') as f:
         f.write(r.text)
 
     #soup = bs4(r.text, 'lxml')
-    soup = bs4(r.content, 'lxml')
+    #soup = bs4(r.content, 'lxml')
 
-    #tag = soup.xpath('//div[@id="twister-main-image"]')
-    #tag = r.html.xpath('//div[@class="collections-collect-button"]')
     tag = r.html.find('script', containing='P.when(\'A\').register("ImageBlockATF", function(A){')
+    #soup = bs4(tag[0].text,'lxml')
+    s = tag[0].text
+    #print(s)
+    print(type(s))
     
-    soup = bs4(tag,'lxml')
-    print(soup)
-    # for e in tag:
-    #     print(e.text)
-    #     my_json = json.loads(e.text)
-    # print(my_json)
+    #pattern = re.compile(r'\.jpg$')#^hiRes
+    #pattern2 = re.compile(r'?:http\:|https\:)?\/\/.*\.(?:png|jpg')#^hiRes
+    #matches = pattern2.finditer(s)
+    #matches = re.findall(r'^[hiRes]',s)
+    matches = re.findall(r'hiRes',s)
+    for match in matches:
+        print(match)
     
 else:
     print("Response status:{}".format(status))
