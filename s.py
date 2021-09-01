@@ -4,7 +4,7 @@ import re
 import json
 import pprint
 
-url = 'https://www.amazon.es/Sennheiser-Auriculares-Bluetooth-Control-t%C3%A1ctil/dp/B08CZQXLQJ/ref=dp_prsubs_2?pd_rd_i=B08CZQXLQJ&psc=1'
+url = 'https://www.amazon.es/Apple-iPhone-64GB-Plata-Reacondicionado/dp/B082DKM8TG/ref=sr_1_3?__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=3L65HJLXS1PD9&dchild=1&keywords=iphine11&qid=1630505792&s=electronics&sprefix=iphi%2Celectronics%2C185&sr=1-3'
 
 headers = {'user-agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36"}
 session = HTMLSession()
@@ -30,9 +30,19 @@ if status == 200:
     #pattern2 = re.compile(r'?:http\:|https\:)?\/\/.*\.(?:png|jpg')#^hiRes
     #matches = pattern2.finditer(s)
     #matches = re.findall(r'^[hiRes]',s)
-    matches = re.findall(r'hiRes',s)
+    
+    # hiRes == High Resolution 
+    # main  ==  ?
+    #large  == 
+    matches = re.findall(r'large(.*?).jpg',s)
     for match in matches:
-        print(match)
+        if '{' in match:
+            url = match.replace('":{"','') + '.jpg'
+        else:
+            url = match.replace('":"','') + '.jpg'
+
+        print(url)
+    
     
 else:
     print("Response status:{}".format(status))
