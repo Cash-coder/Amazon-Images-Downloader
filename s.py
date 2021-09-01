@@ -22,13 +22,11 @@ if status == 200:
     #tag = soup.xpath('//div[@id="twister-main-image"]')
     #tag = r.html.xpath('//div[@class="collections-collect-button"]')
     tag = r.html.find('script', containing='P.when(\'A\').register("ImageBlockATF", function(A){')
-    #tag = str(tag)
-
-    #tag = soup.xpath('//div[@id="twister-main-image"]//preceding-sibling::script')
-    #print(tag.absolute_links)
     
-    for e in tag:
-        print(e.text)
+    soup = bs4(tag,'lxml')
+    print(soup)
+    # for e in tag:
+    #     print(e.text)
     #     my_json = json.loads(e.text)
     # print(my_json)
     
