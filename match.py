@@ -51,7 +51,8 @@ def get_matched_links(response):
         if item_p and attribute_p in prod.text:
             link = prod.absolute_links
             #print({'query':query,'link':link})
-            entry = {'query':query,'link':link,'prod_title':prod.text}
+            #entry = {'query':query,'link':link,'prod_title':prod.text}
+            entry = (query,link,prod.text)
             links.append(entry)
     
     return links
@@ -66,20 +67,18 @@ def write_excel(links):
     ws = wb.active
 
     for entry in links:
-        query = entry.get('query')
-        prod_title = entry.get('prod_title')
-        link = str(entry.get('link')).replace('{','').replace('}','')
-
-        print(link)
-
-
-        #print(query,link,prod_title)
+        #query = entry.get('query')
+        #prod_title = entry.get('prod_title')
+        #link = str(entry.get('link')).replace('{','').replace('}','')
+        
+        ws.append(entry)
+        # #print(query,link,prod_title)
     
-        ws.cell(row=row_n,column=col_n,value = query)
-        ws.cell(row=row_n,column=col_n + 1 ,value = prod_title)
-        ws.cell(row=row_n,column=col_n + 3 ,value = link.strip("'"))
+        # ws.cell(row=row_n,column=col_n,value = query)
+        # ws.cell(row=row_n,column=col_n + 1 ,value = prod_title)
+        # ws.cell(row=row_n,column=col_n + 3 ,value = link.strip("'"))
 
-        row_n += 1
+        # row_n += 1
     
     wb.save('matches.xlsx')
     # for row in ws.iter_rows(values_only=True):
@@ -90,6 +89,8 @@ def write_excel(links):
 #take the item and its attribut from target_prods
 item = 'iPhone 12 pro' #Pro
 attribute = 'grafito'
+
+
 
 #process the item and the attribute to match Amazon's standart (Capitalization, iPhone,etc...)
 #This is used later to identify matches within the titles of the prods.

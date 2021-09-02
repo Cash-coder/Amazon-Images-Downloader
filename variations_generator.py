@@ -30,43 +30,56 @@ for row in ws.iter_rows(values_only=True):
             print(e)
             pass
         
-        try:
-            capacity = capacity.split(' ')
-            #print(capacity)
-            #If GB not present in capacity, add it
-            if 'GB' not in str(capacity):
-                capacity_list=[]
-                for item in capacity:
-                    item = item + 'GB'
-                    capacity_list.append(item)
-                    #print(item)
-                #capacity.clear()
-                for item in capacity_list:
-                    capacity.append(item)
-                #print(capacity_list)
-        except Exception as e:
-            print(e)
-            pass
+        if colors:
+            for color in colors:
+                variation = brand + ' ' + model + ' ' + color
+                try:
+                    variation = variation.replace('.0','').replace(',','')
+                except:
+                    pass
 
-        print(model,colors)
-        try:
-            combinations = list(itertools.product(colors,str(model)))#,capacity_list))
-            #print(combinations)
+                item = brand + ' ' + model
+                variations_list.append({'variation':variation,'item':item,'color':color})
+                print(variation)
+        
 
-            for combination in combinations:
-                #print(combination)
-                #combination = list(combination)
-                #one variation for nuevo, other for seminuevo
-                variation1 = brand + ' ' + combination[1] + ' ' + combination[0]
-                #variation2 = brand + ' ' + model + ' ' + combination[1] + ' ' + combination[0] + ' ' + prod_states[1]
-                #variation1 = brand + ' ' + model + ' ' + combination[1] + ' ' + combination[0] + ' ' + prod_states[0]
-                # print(variation1)
-                # print(variation2)
-                variations_list.append(variation1)
-                #variations_list.append(variation2)
-        except Exception as e:
-            print(e)
-            pass
+        # try:
+        #     capacity = capacity.split(' ')
+        #     #print(capacity)
+        #     #If GB not present in capacity, add it
+        #     if 'GB' not in str(capacity):
+        #         capacity_list=[]
+        #         for item in capacity:
+        #             item = item + 'GB'
+        #             capacity_list.append(item)
+        #             #print(item)
+        #         #capacity.clear()
+        #         for item in capacity_list:
+        #             capacity.append(item)
+        #         #print(capacity_list)
+        # except Exception as e:
+        #     print(e)
+        #     pass
+
+        # print(model,colors)
+        # try:
+        #     combinations = list(itertools.product(colors,str(model)))#,capacity_list))
+        #     #print(combinations)
+
+        #     for combination in combinations:
+        #         #print(combination)
+        #         #combination = list(combination)
+        #         #one variation for nuevo, other for seminuevo
+        #         variation1 = brand + ' ' + combination[1] + ' ' + combination[0]
+        #         #variation2 = brand + ' ' + model + ' ' + combination[1] + ' ' + combination[0] + ' ' + prod_states[1]
+        #         #variation1 = brand + ' ' + model + ' ' + combination[1] + ' ' + combination[0] + ' ' + prod_states[0]
+        #         # print(variation1)
+        #         # print(variation2)
+        #         variations_list.append(variation1)
+        #         #variations_list.append(variation2)
+        # except Exception as e:
+        #     print(e)
+        #     pass
     #avoid blank rows
     elif row == None:
         continue
@@ -77,10 +90,16 @@ ws2 = wb2.active
 
 ws = wb.active
 n = 1
-for var in variations_list:
-    ws2.cell(row=n,column=1).value = var
+for e in variations_list:
+    
+    variation = e.get('variation')
+    item = e.get('item')
+    color = e.get('color')
+
+    ws2.cell(row=n,column=1).value = item
+    ws2.cell(row=n,column=2).value = color
+    ws2.cell(row=n,column=3).value = variation
     n +=1
-    ws2.cell(row=n,column=2).value = 0
 # for row in ws2.iter_rows():
 #     value = variations_list.pop()   
 #     print(value)
