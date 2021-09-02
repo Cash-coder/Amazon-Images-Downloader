@@ -1,2 +1,5 @@
 import pyautogui
-pyautogui.typewrite(['f2', 'enter', ], interval=0.5)
+
+for _ in range(30):
+    pyautogui.typewrite(['f2', 'enter', ], interval=0.1)
+    print('done')

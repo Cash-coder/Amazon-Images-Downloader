@@ -18,6 +18,7 @@ def make_query_url(item,attribute):
     #Electronics URL
     url = 'https://www.amazon.es/s?k=' + query + '&i=electronics&__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&ref=nb_sb_noss_2'
     return url, query_t
+            
 
 #probably in disuse because now I lower() the prod_title
 def make_match_data(item, attribute):
@@ -71,10 +72,6 @@ def select(prod,title,query):
         print(entry)
         links.append(entry)
 
-        entry = (query,prod.text,' ',link)
-        print(entry)
-        links.append(entry)
-
         return links
 
     else:
@@ -85,7 +82,6 @@ def select(prod,title,query):
 def get_matched_links(response,item_p,attribute_p,query):
     products_title = response.html.xpath('//div[@class="a-section a-spacing-none"]/div[@class="a-section a-spacing-none a-spacing-top-small"]/h2')
     #s = tag[0].text
-    links = []
     for prod in products_title:
         #print(prod.text)
         title = prod.text
@@ -98,14 +94,16 @@ def get_matched_links(response,item_p,attribute_p,query):
 
         if n == 1:
             if item_p in title:
-                links = select(prod,title,query)
-                return links
+                if attribute_p in title:
+                    links = select(prod,title,query)
+                    return links
 
         elif n == 2:
             if s[0] in title:
                 if s[1] in title:
-                    links = select(prod,title,query)
-                    return links
+                    if attribute_p in title:
+                        links = select(prod,title,query)
+                        return links
 
         elif n == 3:
             if s[0] in title:
