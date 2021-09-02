@@ -21,12 +21,22 @@ def make_query_url(item,attribute):
 
 
 def make_match_data(item,attribute):
-    words = item.split(' ')
-    new_words = []
-    for word in words:
-        word = word.capitalize() 
-        new_words.append(word)
-    item_p = ' '.join(new_words)
+    try:
+        words = item.split(' ')
+        new_words = []
+        for word in words:
+            word = word.capitalize() 
+            new_words.append(word)
+        item_p = ' '.join(new_words)
+
+    except Exception as e:
+        print(e)
+        pass
+
+    try:
+        item_p = item.capitalize()
+    except:
+        pass
 
     if 'Iphone' or 'iphone' in item:
         item_p = item.replace('Iphone','iPhone').replace('iphone','iPhone')
@@ -35,6 +45,7 @@ def make_match_data(item,attribute):
 
     print('maked data to match:',item_p,attribute_p)
     return item_p, attribute_p
+    
 
 
 def make_request(url):
@@ -51,7 +62,7 @@ def get_matched_links(response,item_p,attribute_p,query):
     links = []
     for prod in products_title:
         #print(prod.text)
-        if item_p and attribute_p in prod.text:
+        if item_p in prod.text and attribute_p in prod.text:
             #if prod.text not in ['Carcasa', 'Funda', 'Protector', 'Soporte'] :
             #if 'Carcasa' and 'Funda' and 'Protector' and 'Soporte' not in prod.text:
             if 'Carcasa' not in prod.text and 'Funda' not in prod.text and 'Protector' not in prod.text and 'Soporte' not in prod.text:
@@ -64,36 +75,31 @@ def get_matched_links(response,item_p,attribute_p,query):
                 entry = (query,prod.text,' ',link)
                 print(entry)
                 links.append(entry)
+        else:
+            write_no_results(query)
     
     return links
 
-row_n = 1
-col_n = 1
 def write_excel(links):
-    global row_n
-    global col_n
-
     wb = load_workbook(filename = 'matches.xlsx')
     ws = wb.active
 
     for entry in links:
-        #query = entry.get('query')
-        #prod_title = entry.get('prod_title')
-        #link = str(entry.get('link')).replace('{','').replace('}','')
-        
         ws.append(entry)
         # #print(query,link,prod_title)
-    
-        # ws.cell(row=row_n,column=col_n,value = query)
-        # ws.cell(row=row_n,column=col_n + 1 ,value = prod_title)
-        # ws.cell(row=row_n,column=col_n + 3 ,value = link.strip("'"))
+    separator = ('################################################','################################################','################################################','################################################')
+    ws.append(separator)
 
-        # row_n += 1
-    
     wb.save('matches.xlsx')
-    # for row in ws.iter_rows(values_only=True):
-    #     if row[0] != None:
-    #         pass
+
+
+def write_no_results(query):
+        
+    wb = load_workbook(filename = 'no_results.xlsx')
+    ws = wb.active
+    entry = (query,'something_here')
+    ws.append(entry)
+    wb.save('no_results.xlsx')
 
 item_attribute_list = []
 def get_item_attribute():
@@ -105,8 +111,7 @@ def get_item_attribute():
         attribute = row[1]
         item_attribute_list.append({'item':item,'attribute':attribute})
 
-# item = 'iPhone 12 pro' #Pro
-# attribute = 'grafito'
+
 get_item_attribute()
 for element in item_attribute_list:
 
@@ -133,14 +138,3 @@ for element in item_attribute_list:
     # write excel with query , prod_title , selection, link
     #selection is if the human validate that url has the needed pictures
     write_excel(links)
-
-# r = make_request(url)
-# status = r.status_code
-# #To visualize response in the browser
-# #save_html_response(r)
-# if status == 200:
-#     links = get_links(r)
-# else:
-#     print("Response status:{} for the query {} and url: {}".format(status,query,url))
-    
-#links = [{'lins1':'at1'},{'lins2':'at2'},{'lins3':'at3'}]
