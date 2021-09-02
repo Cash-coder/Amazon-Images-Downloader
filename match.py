@@ -9,7 +9,7 @@ from openpyxl import load_workbook
 
 def make_query_url(item,attribute):
     query = item + ' ' + attribute
-    #this is used for human reference in the file
+    #this is used for human reference in the file, with spaces instead of +
     query_t = item + ' ' + attribute 
     query = query.replace(' ','+')
 
@@ -19,41 +19,45 @@ def make_query_url(item,attribute):
     url = 'https://www.amazon.es/s?k=' + query + '&i=electronics&__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&ref=nb_sb_noss_2'
     return url, query_t
 
+#probably in disuse because now I lower() the prod_title
+def make_match_data(item, attribute):
+    # try:
+    #     words = item.split(' ')
+    #     new_words = []
+    #     for word in words:
+    #         word = word.capitalize() 
+    #         new_words.append(word)
+    #     item_p = ' '.join(new_words)
 
-def make_match_data(item,attribute):
-    try:
-        words = item.split(' ')
-        new_words = []
-        for word in words:
-            word = word.capitalize() 
-            new_words.append(word)
-        item_p = ' '.join(new_words)
+    # except Exception as e:
+    #     print(e)
+    #     pass
 
-    except Exception as e:
-        print(e)
-        pass
+    # try:
+    #     item_p = item.capitalize()
+    # except:
+    #     pass
 
-    try:
-        item_p = item.capitalize()
-    except:
-        pass
+    # if 'Iphone' or 'iphone' in item:
+    #     item_p = item.replace('Iphone','iPhone').replace('iphone','iPhone')
 
-    if 'Iphone' or 'iphone' in item:
-        item_p = item.replace('Iphone','iPhone').replace('iphone','iPhone')
+    if attribute:
+        attribute_p = attribute.lower()
+    if item:
+        item_p = item.lower()
 
-    attribute_p = attribute.capitalize()
-
-    print('maked data to match:',item_p,attribute_p)
-    return item_p, attribute_p
-    
+    return item_p,attribute_p    
 
 
 def make_request(url):
     headers = {'user-agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36"}
     session = HTMLSession()
     r = session.get(url,headers=headers,allow_redirects=True)
-    print('request made')
-    return r
+    #print('request made: ',url)
+    if r.status_code == 200:
+        return r
+    else:
+        print('bad request', r.status_code)
 
 
 def get_matched_links(response,item_p,attribute_p,query):
@@ -62,10 +66,13 @@ def get_matched_links(response,item_p,attribute_p,query):
     links = []
     for prod in products_title:
         #print(prod.text)
-        if item_p in prod.text and attribute_p in prod.text:
+        title = prod.text
+        title = title.lower()
+
+        if item_p in title and attribute_p in title:
             #if prod.text not in ['Carcasa', 'Funda', 'Protector', 'Soporte'] :
             #if 'Carcasa' and 'Funda' and 'Protector' and 'Soporte' not in prod.text:
-            if 'Carcasa' not in prod.text and 'Funda' not in prod.text and 'Protector' not in prod.text and 'Soporte' not in prod.text:
+            if 'carcasa' not in title and 'funda' not in title and 'protector' not in title and 'soporte' not in title:
                 link = prod.absolute_links
                 link = str(link)
                 link = link.replace('{','').replace('}','')
@@ -76,6 +83,8 @@ def get_matched_links(response,item_p,attribute_p,query):
                 print(entry)
                 links.append(entry)
         else:
+            print('not found:', query)
+            print('\n')
             write_no_results(query)
     
     return links
@@ -118,7 +127,7 @@ for element in item_attribute_list:
     item = element.get('item')
     attribute = element.get('attribute')
 
-    print(item,attribute)
+    #print(item,attribute)
 
     #process the item and the attribute to match Amazon's standart (Capitalization, iPhone,etc...)
     #This is used later to identify matches within the titles of the prods.
