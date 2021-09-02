@@ -65,6 +65,7 @@ def select(prod,title,query):
 def get_matched_links(response,item_p,attribute_p,query):
     products_title = response.html.xpath('//div[@class="a-section a-spacing-none"]/div[@class="a-section a-spacing-none a-spacing-top-small"]/h2')
     #s = tag[0].text
+    n_prods = (len(products_title))
     for prod in products_title:
         #print(prod.text)
         title = prod.text
@@ -76,75 +77,74 @@ def get_matched_links(response,item_p,attribute_p,query):
         print('this is len:',n)
 
         if n == 1:
-            if item_p in title:
-                if attribute_p in title:
-                    links = select(prod,title,query)
-                    return links
+            if item_p in title and attribute_p in title :
+                links = select(prod,title,query)
+                return links
+            else:
+                print('not found in get_MATCHED links:','n_prods :',n_prods, query,'-----',title, 'item: ',item_p,'attr: ',attribute_p,)
+                print('-----------')
+                write_no_results(query)
 
         elif n == 2:
-            if s[0] in title:
-                if s[1] in title:
-                    if attribute_p in title:
-                        links = select(prod,title,query)
-                        return links
+            if attribute_p in title and s[0] in title and s[1] in title:
+                links = select(prod,title,query)
+                return links
+            else:
+                print('not found in get_MATCHED links:','n_prods :',n_prods, query,'-----',title, 'item: ',item_p,'attr: ',attribute_p,)
+                print('-----------')
+                write_no_results(query)
 
         elif n == 3:
-            if s[0] in title:
-                if s[1] in title:
-                    if s[2] in title:
-                        if attribute_p in title:
-                            links = select(prod,title,query)
-                            return links
+            if attribute_p in title and s[0] in title and s[1] in title and s[2] in title:
+                links = select(prod,title,query)
+                return links
+            else:
+                print('not found in get_MATCHED links:','n_prods :',n_prods, query,'-----',title, 'item: ',item_p,'attr: ',attribute_p,)
+                print('-----------')
+                write_no_results(query)
         elif n == 4:                    
-            if s[0] in title:
-                if s[1] in title:
-                    if s[2] in title:
-                        if s[3] in title:
-                            if attribute_p in title:
-                                links = select(prod,title,query)
-                                return links
+            if attribute_p in title and s[0] in title and s[1] in title and s[2] in title and s[3] in title:
+                links = select(prod,title,query)
+                return links
+            else:
+                print('not found in get_MATCHED links:','n_prods :',n_prods, query,'-----',title, 'item: ',item_p,'attr: ',attribute_p,)
+                print('-----------')
+                write_no_results(query)
         elif n == 5:                    
-            if s[0] in title:
-                if s[1] in title:
-                    if s[2] in title:
-                        if s[3] in title:
-                            if s[4] in title:
-                                if attribute_p in title:
-                                    links = select(prod,title,query)
-                                    return links
+            if attribute_p in title and s[0] in title and s[1] in title and s[2] in title and s[3] in title and s[4] in title:
+                links = select(prod,title,query)
+                return links
+            else:
+                print('not found in get_MATCHED links:','n_prods :',n_prods, query,'-----',title, 'item: ',item_p,'attr: ',attribute_p,)
+                print('-----------')
+                write_no_results(query)
+            
         elif n == 6:                    
-            if s[0] in title:
-                if s[1] in title:
-                    if s[2] in title:
-                        if s[3] in title:
-                            if s[4] in title:
-                                if s[5] in title:
-                                    if attribute_p in title:
-                                        links = select(prod,title,query)
-                                        return links
+            if attribute_p in title and s[0] in title and s[1] in title and s[2] in title and s[3] in title and s[4] in title  and s[5] in title:
+                links = select(prod,title,query)
+                return links
+            else:
+                print('not found in get_MATCHED links:','n_prods :',n_prods, query,'-----',title, 'item: ',item_p,'attr: ',attribute_p,)
+                print('-----------')
+                write_no_results(query)
         elif n == 7:                    
-            if s[0] in title:
-                if s[1] in title:
-                    if s[2] in title:
-                        if s[3] in title:
-                            if s[4] in title:
-                                if s[5] in title:
-                                    if s[6] in title:
-                                        if attribute_p in title:
-                                            links = select(prod,title,query)
-                                            return links
+            if attribute_p in title and s[0] in title and s[1] in title and s[2] in title and s[3] in title and s[4] in title  and s[5] in title  and s[6] in title in title:
+                links = select(prod,title,query)
+                return links
+            else:
+                print('not found in get_MATCHED links:','n_prods :',n_prods, query,'-----',title, 'item: ',item_p,'attr: ',attribute_p,)
+                print('-----------')
+                write_no_results(query)
         elif n == 8:                    
-            if s[0] in title:
-                if s[1] in title:
-                    if s[2] in title:
-                        if s[3] in title:
-                            if s[4] in title:
-                                if s[5] in title:
-                                    if s[6] in title:
-                                        if s[7] in title:
-                                            if attribute_p in title:
-                                                links = select(prod,title,query)
-                                                return links
+            if attribute_p in title and s[0] in title and s[1] in title and s[2] in title and s[3] in title and s[4] in title  and s[5] in title  and s[6] in title and s[7] in title:
+                links = select(prod,title,query)
+                return links
+            else:
+                print('not found in get_MATCHED links:','n_prods :',n_prods, query,'-----',title, 'item: ',item_p,'attr: ',attribute_p,)
+                print('-----------')
+                write_no_results(query)
+                                            
+                                               
 
 
         else:
