@@ -59,6 +59,28 @@ def make_request(url):
     else:
         print('bad request', r.status_code)
 
+def select(prod,title,query):
+    links = []
+    #print(query,title)
+    if 'carcasa' not in title and 'funda' not in title and 'protector' not in title and 'soporte' not in title:
+        link = prod.absolute_links
+        link = str(link)
+        link = link.replace('{','').replace('}','')
+        link = link.replace("'",'')
+        entry = (query,prod.text,' ',link)
+        print(entry)
+        links.append(entry)
+
+        entry = (query,prod.text,' ',link)
+        print(entry)
+        links.append(entry)
+
+        return links
+
+    else:
+            print('not found:', query)
+            print('-----------')
+            write_no_results(query)
 
 def get_matched_links(response,item_p,attribute_p,query):
     products_title = response.html.xpath('//div[@class="a-section a-spacing-none"]/div[@class="a-section a-spacing-none a-spacing-top-small"]/h2')
@@ -69,38 +91,119 @@ def get_matched_links(response,item_p,attribute_p,query):
         title = prod.text
         title = title.lower()
 
-        if item_p in title and attribute_p in title:
-            #if prod.text not in ['Carcasa', 'Funda', 'Protector', 'Soporte'] :
-            #if 'Carcasa' and 'Funda' and 'Protector' and 'Soporte' not in prod.text:
-            if 'carcasa' not in title and 'funda' not in title and 'protector' not in title and 'soporte' not in title:
-                link = prod.absolute_links
-                link = str(link)
-                link = link.replace('{','').replace('}','')
-                link = link.replace("'",'')
-                #print({'query':query,'link':link})
-                #entry = {'query':query,'link':link,'prod_title':prod.text}
-                entry = (query,prod.text,' ',link)
-                print(entry)
-                links.append(entry)
+        #no matter the order, if the words of the query are in title, include that url
+        s = item_p.split(' ')
+        n = len(s)
+        print('this is len:',n)
+
+        if n == 1:
+            if item_p in title:
+                links = select(prod,title,query)
+                return links
+
+        elif n == 2:
+            if s[0] in title:
+                if s[1] in title:
+                    links = select(prod,title,query)
+                    return links
+
+        elif n == 3:
+            if s[0] in title:
+                if s[1] in title:
+                    if s[2] in title:
+                        if attribute_p in title:
+                            links = select(prod,title,query)
+                            return links
+        elif n == 4:                    
+            if s[0] in title:
+                if s[1] in title:
+                    if s[2] in title:
+                        if s[3] in title:
+                            if attribute_p in title:
+                                links = select(prod,title,query)
+                                return links
+        elif n == 5:                    
+            if s[0] in title:
+                if s[1] in title:
+                    if s[2] in title:
+                        if s[3] in title:
+                            if s[4] in title:
+                                if attribute_p in title:
+                                    links = select(prod,title,query)
+                                    return links
+        elif n == 6:                    
+            if s[0] in title:
+                if s[1] in title:
+                    if s[2] in title:
+                        if s[3] in title:
+                            if s[4] in title:
+                                if s[5] in title:
+                                    if attribute_p in title:
+                                        links = select(prod,title,query)
+                                        return links
+        elif n == 7:                    
+            if s[0] in title:
+                if s[1] in title:
+                    if s[2] in title:
+                        if s[3] in title:
+                            if s[4] in title:
+                                if s[5] in title:
+                                    if s[6] in title:
+                                        if attribute_p in title:
+                                            links = select(prod,title,query)
+                                            return links
+        elif n == 8:                    
+            if s[0] in title:
+                if s[1] in title:
+                    if s[2] in title:
+                        if s[3] in title:
+                            if s[4] in title:
+                                if s[5] in title:
+                                    if s[6] in title:
+                                        if s[7] in title:
+                                            if attribute_p in title:
+                                                links = select(prod,title,query)
+                                                return links
+
+
         else:
             print('not found:', query)
-            print('\n')
+            print('-----------')
             write_no_results(query)
+
+
+        # if item_p in title and attribute_p in title:
+        #     #if prod.text not in ['Carcasa', 'Funda', 'Protector', 'Soporte'] :
+        #     #if 'Carcasa' and 'Funda' and 'Protector' and 'Soporte' not in prod.text:
+        #     if 'carcasa' not in title and 'funda' not in title and 'protector' not in title and 'soporte' not in title:
+        #         link = prod.absolute_links
+        #         link = str(link)
+        #         link = link.replace('{','').replace('}','')
+        #         link = link.replace("'",'')
+        #         #print({'query':query,'link':link})
+        #         #entry = {'query':query,'link':link,'prod_title':prod.text}
+        #         entry = (query,prod.text,' ',link)
+        #         print(entry)
+        #         links.append(entry)
+        
     
-    return links
+    
 
 def write_excel(links):
-    wb = load_workbook(filename = 'matches.xlsx')
-    ws = wb.active
+    try:
+        wb = load_workbook(filename = 'matches.xlsx')
+        ws = wb.active
 
-    for entry in links:
-        ws.append(entry)
-        # #print(query,link,prod_title)
-    separator = ('################################################','################################################','################################################','################################################')
-    ws.append(separator)
+        for entry in links:
+            ws.append(entry)
+            # #print(query,link,prod_title)
+        separator = ('################################################','################################################','################################################','################################################')
+        ws.append(separator)
 
-    wb.save('matches.xlsx')
-
+        wb.save('matches.xlsx')
+    except Exception as e:
+        print(e)
+        pass
 
 def write_no_results(query):
         
@@ -110,8 +213,9 @@ def write_no_results(query):
     ws.append(entry)
     wb.save('no_results.xlsx')
 
-item_attribute_list = []
+
 def get_item_attribute():
+    item_attribute_list = []
     wb = load_workbook(filename = 'phones_color_variations.xlsx')
     ws = wb.active
  
@@ -119,9 +223,10 @@ def get_item_attribute():
         item = row[0]
         attribute = row[1]
         item_attribute_list.append({'item':item,'attribute':attribute})
+    return item_attribute_list
 
 
-get_item_attribute()
+item_attribute_list = get_item_attribute()
 for element in item_attribute_list:
 
     item = element.get('item')

@@ -9,8 +9,12 @@ n = len(s)
 
 if n == 1:
     pass
+
 elif n == 2:
-    pass
+    if s[0] in title:
+        if s[1] in title:
+            print('correct')
+
 elif n == 3:
     if s[0] in title:
         if s[1] in title:
