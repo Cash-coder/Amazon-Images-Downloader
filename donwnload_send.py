@@ -86,9 +86,16 @@ url_list = get_pictures_urls(raw_data)
     #download_picture(url)
 write_csv(url_list)
 
+#when all processed, download the links, 
+# title qith the query n+1
+# send to mega
+#Gustavo review 50 by 50 HOW MARK THE MISSING ONES ?
+# upload the images files or the image url's of mega to prod_db
+# prod color pictures
 
 
-############### Maybe useful code later:
+
+############### Maybe useful code later: ################
 #save_html_response(r)
 
 #soup = bs4(r.text, 'lxml')
