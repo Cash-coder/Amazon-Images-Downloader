@@ -92,10 +92,18 @@ def save_response(r):
 
 def get_matched_links(response,item_p,attribute_p,query):
     print('inside get matched links')
-    products_title = response.html.xpath('//div[@class="a-section a-spacing-none"]/div[@class="a-section a-spacing-none a-spacing-top-small"]/h2')
+    #products_title = response.html.xpath('//div[@class="a-section a-spacing-none"]/div[@class="a-section a-spacing-none a-spacing-top-small"]/h2')
     
+    products = response.html.xpath('//div[@data-component-type="s-search-result"]')
+
+    for p in products:
+        title= p.xpath('//div[@class="a-section a-spacing-none a-spacing-top-small"]/h2')[0].text
+        price = p.xpath('//span[@class="a-price-whole"]')[0].text
+        # print(title)
+        # print(price)
     #s = tag[0].text
-    n_prods = (len(products_title))
+    
+    n_prods = (len(products))
     print('founded {} products'.format(n_prods))
     
     #prods
@@ -104,28 +112,25 @@ def get_matched_links(response,item_p,attribute_p,query):
     '//span[@class="a-price-whole"]'
     #save_response(response)
 
-    ##########
-    # prods = response.html.xpath('//div[@data-component-type="s-search-result"]')
-
-    # for p in prods:
-    #     title= p.xpath('//div[@class="a-section a-spacing-none a-spacing-top-small"]/h2')[0].text
-    #     price = p.xpath('//span[@class="a-price-whole"]')[0].text
-    #     print(title)
-    #     print(price)
-        
-
-    for prod in products_title:
+    for prod in products:
         #print(prod.text)
-        title = prod.text
+        title= prod.xpath('//div[@class="a-section a-spacing-none a-spacing-top-small"]/h2')[0].text
         title = title.lower()
-        print('get_maatch; inside for loop','prod_title:',title)
+        price = prod.xpath('//span[@class="a-price-whole"]')[0].text
+        price = price.int()
 
         #no matter the order, if the words of the query are in title, include that url
         s = item_p.split(' ')
         n = len(s)
         n_t = len(attribute_p)
 
+        #set the minimal price for the items, Example: No iphone costs less than 80€, but there unwanted are accesories
+        min_price = 80
+        if price < min_price:
+            print('this price is too low:',price)
+            continue
         
+        links = []
         print('this is len:',n + n_t)
         if n == 1:
             if item_p in title and attribute_p in title :
