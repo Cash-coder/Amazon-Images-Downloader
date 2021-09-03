@@ -1,25 +1,21 @@
-title = 'Samsung Smartphone Galaxy waca S20+ FE con Pantalla Infinity-O FHD+ de 6,5 Pulgadas, 8 GB de RAM y 256 GB de Memoria Interna Ampliable, Batería de 4500 mAh y Carga rápida Azul (Version ES)'
-title = title.lower()
+from requests_html import HTMLSession
 
-item_p = 'samsung galaxy s20+'
-attribute_p = 'azul'
+headers = {'user-agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36"} 
 
-s = item_p.split(' ')
-n = len(s)
+session = HTMLSession()
 
-if n == 1:
-    pass
+url = 'https://www.amazon.es/s?k=iphone+xr+amarillo&i=electronics&__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&ref=nb_sb_noss_2'
 
-elif n == 2:
-    if s[0] in title:
-        if s[1] in title:
-            print('correct')
+r = session.get(url,headers=headers,allow_redirects=True) 
 
-elif n == 3:
-    if s[0] in title:
-        if s[1] in title:
-            if s[2] in title:
-                print('correct')
+prods = r.html.xpath('//div[@data-component-type="s-search-result"]')
+
+for p in prods:
+    title= p.xpath('//div[@class="a-section a-spacing-none a-spacing-top-small"]/h2')[0].text
+    price = p.xpath('//span[@class="a-price-whole"]')[0].text
+    print(title)
+    print(price)
+
 
 
 # if title in splitted and attribute_p in title:

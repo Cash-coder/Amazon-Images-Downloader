@@ -1,7 +1,9 @@
-#test
+from twocaptcha import TwoCaptcha
+
 from bs4 import BeautifulSoup as bs4
 from requests_html import HTMLSession
 import re
+import traceback
 
 import xlsxwriter
 from openpyxl.workbook.workbook import Workbook
@@ -36,9 +38,27 @@ def make_match_data(item, attribute):
 def make_request(url):
     headers = {'user-agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36"}
     session = HTMLSession()
-    r = session.get(url,headers=headers,allow_redirects=True)
+
+    proxies = {
+        'http':'185.121.13.34',
+        'http':'193.43.119.89',
+        'http':'5.188.183.202',
+        'http':'103.80.87.224',
+        'http':'83.147.12.143',
+        'http':'185.238.229.88',
+        'http':'185.226.107.157',
+        'http':'185.206.249.118',
+        'http':'185.121.15.41',
+        'http':'185.121.12.141',}
+
+    r = session.get(url,headers=headers,proxies=proxies,allow_redirects=True)
     #print('request made: ',url)
     if r.status_code == 200:
+        captcha = r.html.xpath('//h4[contains(text(),"Introduce los caracteres que se muestran a continuación")]')
+        if captcha:
+            print('detected CAPTCHA !!')
+            solver = TwoCaptcha('c6aba1c6718b89d60b0d5f0c4eb34785')
+            result = solver.normal()
         return r
     else:
         print('bad request', r.status_code)
@@ -58,24 +78,55 @@ def select(prod,title,query):
         return links
 
     else:
-            print('not found from slect:', query,title)
+            print('not found from SELECT:', query,title)
             print('-----------')
             write_no_results(query)
 
+nr = 0
+def save_response(r):
+    global nr
+    with open('response'+str(nr)+'.html','wb') as f:
+        f.write(r.content)
+    nr += 1
+    print('saved response')
+
 def get_matched_links(response,item_p,attribute_p,query):
+    print('inside get matched links')
     products_title = response.html.xpath('//div[@class="a-section a-spacing-none"]/div[@class="a-section a-spacing-none a-spacing-top-small"]/h2')
+    
     #s = tag[0].text
     n_prods = (len(products_title))
+    print('founded {} products'.format(n_prods))
+    
+    #prods
+    '//div[@data-component-type="s-search-result"]'
+    #price
+    '//span[@class="a-price-whole"]'
+    #save_response(response)
+
+    ##########
+    # prods = response.html.xpath('//div[@data-component-type="s-search-result"]')
+
+    # for p in prods:
+    #     title= p.xpath('//div[@class="a-section a-spacing-none a-spacing-top-small"]/h2')[0].text
+    #     price = p.xpath('//span[@class="a-price-whole"]')[0].text
+    #     print(title)
+    #     print(price)
+        
+
     for prod in products_title:
         #print(prod.text)
         title = prod.text
         title = title.lower()
+        print('get_maatch; inside for loop','prod_title:',title)
 
         #no matter the order, if the words of the query are in title, include that url
         s = item_p.split(' ')
         n = len(s)
-        print('this is len:',n)
+        n_t = len(attribute_p)
 
+        
+        print('this is len:',n + n_t)
         if n == 1:
             if item_p in title and attribute_p in title :
                 links = select(prod,title,query)
@@ -144,9 +195,6 @@ def get_matched_links(response,item_p,attribute_p,query):
                 print('-----------')
                 write_no_results(query)
                                             
-                                               
-
-
         else:
             print('not found in get_matched links:', query,item_p,attribute_p,title)
             print('-----------')
@@ -213,12 +261,13 @@ for element in item_attribute_list:
     item = element.get('item')
     attribute = element.get('attribute')
 
-    #print(item,attribute)
+    #print('1',item,attribute)
 
     #process the item and the attribute to match Amazon's standart (Capitalization, iPhone,etc...)
     #This is used later to identify matches within the titles of the prods.
     # _p means processed: from 'iphone pro' to 'iPhone Pro'
     item_p,attribute_p = make_match_data(item,attribute)
+    #print('2',item_p,attribute_p)
 
     #with the above data make the url and the query (used later in the excel)
     url, query = make_query_url(item_p,attribute_p)
