@@ -263,31 +263,43 @@ def get_matched_links(url,item_p,attribute_p,query,response):
 
 
 
-
+row = 1
 def write_excel(links):
+    global row
     try:
-        wb = load_workbook(filename = 'matches.xlsx')
-        #wb = Workbook()
+        #wb = load_workbook(filename = 'matches.xlsx')
+        wb = Workbook()
         ws = wb.active
 
-        for entry in links:
-            ws.append(entry)
-            # #print(query,link,prod_title)
+        #query
+        ws.cell(row=row,column=1,value=links[0])
+        #title
+        ws.cell(row=row,column=2,value=links[1])
+        #white space
+        ws.cell(row=row,column=3,value=links[2])
+        #link
+        ws.cell(row=row,column=4,value=links[3])
+        
+        #ws.append(entry)
+        # #print(query,link,prod_title)
         separator = ('################################################','################################################','################################################','################################################')
-        ws.append(separator)
-
+        
+        row += 1
         wb.save('matches.xlsx')
     except Exception as e:
         print(e)
         pass
 
+no_row_no_results = 1
 def write_no_results(query):
-
-    wb = load_workbook(filename = 'no_results.xlsx')
-    #wb = Workbook()
+    global no_row_no_results
+    #wb = load_workbook(filename = 'no_results.xlsx')
+    wb = Workbook()
     ws = wb.active
-    entry = (query,'something_here')
-    ws.append(entry)
+    ws.cell(row= no_row_no_results,column=1,value=query)
+    no_row_no_results += 1
+    #entry = (query,'something_here')
+    #ws.append(entry)
     wb.save('no_results.xlsx')
 
 
@@ -328,7 +340,7 @@ for element in item_attribute_list:
 
     #extract the links of the products which titles matches the query
     #list of dicts with link , query, prod_title
-    links = get_matched_links(item_p=item_p,attribute_p=attribute_p,query=query,url=url,response=response)
+    links_set = get_matched_links(item_p=item_p,attribute_p=attribute_p,query=query,url=url,response=response)
     # write excel with query , prod_title , selection, link
     #selection is if the human validate that url has the needed pictures
-    write_excel(links)
+    write_excel(links_set)
