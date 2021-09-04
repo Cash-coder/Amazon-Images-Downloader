@@ -7,15 +7,24 @@ from time import sleep
 from openpyxl.workbook.workbook import Workbook
 from openpyxl import load_workbook
 
+
+output_file = 'tablets_matches.xlsx' #used to save the results
+no_results = 'tablets_no_results.xlsx'
+variations_file = 'tablets_color_variations.xlsx'
+
+
 #get item + color from xlsx list
 def get_target_list():
     item_attribute_list = []
-    wb = load_workbook(filename = 'phones_color_variations.xlsx')
+    wb = load_workbook(filename = variations_file)
     ws = wb.active
 
     for row in ws.iter_rows(values_only=True):
-        item = row[0]
-        attribute = row[1]
+        item = row[1]
+        attribute = row[2]
+        if attribute == None: # phones-tablets with only one color, use a white space to keep the code as it is
+            attribute = ' '
+            print('###################This item hasn\'t attribute!!',item)
         item_attribute_list.append({'item':item,'attribute':attribute})
     return item_attribute_list
 
@@ -25,6 +34,7 @@ def make_match_data(item, attribute):
         attribute_p = attribute.lower()
     if item:
         item_p = item.lower()
+        item_p = item_p.replace('(','').replace(')','') #ipad pro (2021)
     #print(item_p,attribute_p)
     return item_p,attribute_p
 
@@ -203,7 +213,7 @@ def write_excel(data_list,query):
         for data in data_list:
             try:
                 #wb = Workbook()
-                wb = load_workbook(filename = 'matches.xlsx')
+                wb = load_workbook(filename = output_file)
                 ws = wb.active
                 
                 query = data.get('query')
@@ -223,18 +233,17 @@ def write_excel(data_list,query):
                 row += 1
                 #ws.append(entry)
                 # #print(query,link,prod_title)
-                wb.save('matches.xlsx')
+                wb.save(output_file)
             except Exception as e:
                 print(e)
                 pass
             
-        
         print('going to write separator in line',row)
         separator = ('############################################################################')
-        wb = load_workbook(filename = 'matches.xlsx')
+        wb = load_workbook(filename = output_file)
         ws = wb.active
         ws.cell(row=row,column=1,value= '############################################################################' )
-        wb.save('matches.xlsx')
+        wb.save('tablets_matches.xlsx')
         row += 1
         print('saved file')
     
@@ -243,29 +252,29 @@ def write_excel(data_list,query):
         print('there ARE NOT a data list') #if there are results
         print(data_list)
         #wb = Workbook()
-        wb = load_workbook(filename = 'no_results.xlsx')
-        ws = wb.active
-        ws.cell(row=row_2,column=1,value=query)
-        row_2 += 1
-        wb.save('no_results.xlsx')
+        write_no_results(query) 
+        #wb = load_workbook(filename = 'tablets_no_results.xlsx')
+        #ws = wb.active
+        #ws.cell(row=row_2,column=1,value=query)
+        #wb.save('no_results.xlsx')
 
 
 ############
-no_row_no_results = 1
+row_2 = 1
 def write_no_results(query):
-    global no_row_no_results
+    global row_2
     #wb = load_workbook(filename = 'no_results.xlsx')
     wb = Workbook()
     ws = wb.active
-    ws.cell(row= no_row_no_results,column=1,value=query)
-    no_row_no_results += 1
+    ws.cell(row= row_2,column=1,value=query)
+    row_2 += 1
     #entry = (query,'something_here')
     #ws.append(entry)
-    wb.save('no_results.xlsx')
+    wb.save(no_results)
 
 
 target_list = get_target_list()
-for e in target_list[:3]:
+for e in target_list[15:25]:
     #get the data from the list
     item = e.get('item')
     color = e.get('attribute')
