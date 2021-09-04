@@ -155,7 +155,7 @@ def get_prod_matches(prods,item_p,attribute_p,query):
                     ##write_no_results(query)
         except Exception as e: 
             print('Exception in get_prod_matches(), this product')
-            print('query:',query,'---------','title:',title)
+            #print('query:',query,'---------','title:',title)
             print(e)
             continue
 
@@ -265,7 +265,7 @@ def write_no_results(query):
 
 
 target_list = get_target_list()
-for e in target_list[:100]:
+for e in target_list[:3]:
     #get the data from the list
     item = e.get('item')
     color = e.get('attribute')
