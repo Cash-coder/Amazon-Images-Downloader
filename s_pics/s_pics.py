@@ -7,29 +7,50 @@ from time import sleep
 from openpyxl.workbook.workbook import Workbook
 from openpyxl import load_workbook
 
+
+output_file = 'mac_matches.xlsx' #used to save the results
+no_results = 'mac_noresults.xlsx' 
+variations_file = 'mac_p.xlsx' #source file to make the requests
+
+
 #get item + color from xlsx list
 def get_target_list():
     item_attribute_list = []
-    wb = load_workbook(filename = 'phones_color_variations.xlsx')
+    wb = load_workbook(filename = variations_file)
     ws = wb.active
 
     for row in ws.iter_rows(values_only=True):
         item = row[0]
         attribute = row[1]
+        if attribute == None: # phones-tablets with only one color, use a white space to keep the code as it is
+            attribute = ' '
+            print('###################This item hasn\'t attribute!!',item)
         item_attribute_list.append({'item':item,'attribute':attribute})
     return item_attribute_list
 
 #lower and join items and colors to compare
 def make_match_data(item, attribute):
-    if attribute:
-        attribute_p = attribute.lower()
+    
     if item:
         item_p = item.lower()
+        item_p = item_p.replace('(','').replace(')','') #already done in clenaer.py
+
+    #sometimes the attribute is an integer, like 2019, can't apply lower()
+    try:
+        if attribute:
+            attribute_p = attribute.lower()
+    except Exception as e:
+        attribute_p = str(attribute)
+        print(e)
+        pass
     #print(item_p,attribute_p)
-    return item_p,attribute_p
+    return item_p, attribute_p
 
 #given the item and the color, make the url to get
 def make_query_url(item,attribute):
+    item = str(item)
+    attribute = str(attribute) #attr sometimes = 2019, can't concatenate
+    
     query = item + ' ' + attribute
     #query_t is used later for human reference in the file, with spaces instead of +
     query_t = item + ' ' + attribute
@@ -48,7 +69,7 @@ def make_request(url):
     d = uc.Chrome(options=options)
     with d:
         d.get(url)
-        print('Request sent')
+        print('Request sent, query: ', query)
         #if the browser opens 2 tabs
         if len(d.window_handles) > 1:
             d.switch_to.window(d.window_handles[1])
@@ -203,7 +224,7 @@ def write_excel(data_list,query):
         for data in data_list:
             try:
                 #wb = Workbook()
-                wb = load_workbook(filename = 'matches.xlsx')
+                wb = load_workbook(filename = output_file)
                 ws = wb.active
                 
                 query = data.get('query')
@@ -223,18 +244,17 @@ def write_excel(data_list,query):
                 row += 1
                 #ws.append(entry)
                 # #print(query,link,prod_title)
-                wb.save('matches.xlsx')
+                wb.save(output_file)
             except Exception as e:
                 print(e)
                 pass
             
-        
         print('going to write separator in line',row)
         separator = ('############################################################################')
-        wb = load_workbook(filename = 'matches.xlsx')
+        wb = load_workbook(filename = output_file)
         ws = wb.active
         ws.cell(row=row,column=1,value= '############################################################################' )
-        wb.save('matches.xlsx')
+        wb.save('tablets_matches.xlsx')
         row += 1
         print('saved file')
     
@@ -243,41 +263,45 @@ def write_excel(data_list,query):
         print('there ARE NOT a data list') #if there are results
         print(data_list)
         #wb = Workbook()
-        wb = load_workbook(filename = 'no_results.xlsx')
-        ws = wb.active
-        ws.cell(row=row_2,column=1,value=query)
-        row_2 += 1
-        wb.save('no_results.xlsx')
+        write_no_results(query) 
+        #wb = load_workbook(filename = 'tablets_no_results.xlsx')
+        #ws = wb.active
+        #ws.cell(row=row_2,column=1,value=query)
+        #wb.save('no_results.xlsx')
 
 
 ############
-no_row_no_results = 1
+row_2 = 1
 def write_no_results(query):
-    global no_row_no_results
+    global row_2
     #wb = load_workbook(filename = 'no_results.xlsx')
     wb = Workbook()
     ws = wb.active
-    ws.cell(row= no_row_no_results,column=1,value=query)
-    no_row_no_results += 1
+    ws.cell(row= row_2,column=1,value=query)
+    row_2 += 1
     #entry = (query,'something_here')
     #ws.append(entry)
-    wb.save('no_results.xlsx')
+    wb.save(no_results)
 
 
 target_list = get_target_list()
-for e in target_list[:3]:
-    #get the data from the list
-    item = e.get('item')
-    color = e.get('attribute')
-    #lower() character to compare later with prod_title
-    item_p,attribute_p = make_match_data(item,color)
-    #make the url to get, and get the query text for reference
-    url, query = make_query_url(item_p,attribute_p)
-    #make the get with selenium
+for e in target_list: #[50:60]
     try:
-        prods = make_request(url)
-    except:
+        #get the data from the list
+        item = e.get('item')
+        color = e.get('attribute')
+        #lower() character to compare later with prod_title
+        item_p,attribute_p = make_match_data(item,color)
+        #make the url to get, and get the query text for reference
+        url, query = make_query_url(item_p,attribute_p)
+        #make the get with selenium
+        try:
+            prods = make_request(url)
+        except:
+            continue
+        
+        matches = get_prod_matches(prods=prods, item_p=item_p, attribute_p=attribute_p, query=query)
+        write_excel(matches,query)
+    except Exception as e:
+        print(e)
         continue
-    
-    matches = get_prod_matches(prods=prods, item_p=item_p, attribute_p=attribute_p, query=query)
-    write_excel(matches,query)
