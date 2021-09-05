@@ -8,9 +8,9 @@ from openpyxl.workbook.workbook import Workbook
 from openpyxl import load_workbook
 
 
-output_file = 'tablets_matches.xlsx' #used to save the results
-no_results = 'tablets_no_results.xlsx'
-variations_file = 'tablets_color_variations.xlsx'
+output_file = 'mac_matches.xlsx' #used to save the results
+no_results = 'mac_noresults.xlsx' 
+variations_file = 'mac_p.xlsx' #source file to make the requests
 
 
 #get item + color from xlsx list
@@ -20,8 +20,8 @@ def get_target_list():
     ws = wb.active
 
     for row in ws.iter_rows(values_only=True):
-        item = row[1]
-        attribute = row[2]
+        item = row[0]
+        attribute = row[1]
         if attribute == None: # phones-tablets with only one color, use a white space to keep the code as it is
             attribute = ' '
             print('###################This item hasn\'t attribute!!',item)
@@ -30,16 +30,27 @@ def get_target_list():
 
 #lower and join items and colors to compare
 def make_match_data(item, attribute):
-    if attribute:
-        attribute_p = attribute.lower()
+    
     if item:
         item_p = item.lower()
-        item_p = item_p.replace('(','').replace(')','') #ipad pro (2021)
+        item_p = item_p.replace('(','').replace(')','') #already done in clenaer.py
+
+    #sometimes the attribute is an integer, like 2019, can't apply lower()
+    try:
+        if attribute:
+            attribute_p = attribute.lower()
+    except Exception as e:
+        attribute_p = str(attribute)
+        print(e)
+        pass
     #print(item_p,attribute_p)
-    return item_p,attribute_p
+    return item_p, attribute_p
 
 #given the item and the color, make the url to get
 def make_query_url(item,attribute):
+    item = str(item)
+    attribute = str(attribute) #attr sometimes = 2019, can't concatenate
+    
     query = item + ' ' + attribute
     #query_t is used later for human reference in the file, with spaces instead of +
     query_t = item + ' ' + attribute
@@ -58,7 +69,7 @@ def make_request(url):
     d = uc.Chrome(options=options)
     with d:
         d.get(url)
-        print('Request sent')
+        print('Request sent, query: ', query)
         #if the browser opens 2 tabs
         if len(d.window_handles) > 1:
             d.switch_to.window(d.window_handles[1])
@@ -274,19 +285,23 @@ def write_no_results(query):
 
 
 target_list = get_target_list()
-for e in target_list[15:25]:
-    #get the data from the list
-    item = e.get('item')
-    color = e.get('attribute')
-    #lower() character to compare later with prod_title
-    item_p,attribute_p = make_match_data(item,color)
-    #make the url to get, and get the query text for reference
-    url, query = make_query_url(item_p,attribute_p)
-    #make the get with selenium
+for e in target_list: #[50:60]
     try:
-        prods = make_request(url)
-    except:
+        #get the data from the list
+        item = e.get('item')
+        color = e.get('attribute')
+        #lower() character to compare later with prod_title
+        item_p,attribute_p = make_match_data(item,color)
+        #make the url to get, and get the query text for reference
+        url, query = make_query_url(item_p,attribute_p)
+        #make the get with selenium
+        try:
+            prods = make_request(url)
+        except:
+            continue
+        
+        matches = get_prod_matches(prods=prods, item_p=item_p, attribute_p=attribute_p, query=query)
+        write_excel(matches,query)
+    except Exception as e:
+        print(e)
         continue
-    
-    matches = get_prod_matches(prods=prods, item_p=item_p, attribute_p=attribute_p, query=query)
-    write_excel(matches,query)
