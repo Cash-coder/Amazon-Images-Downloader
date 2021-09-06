@@ -12,11 +12,12 @@ output_file = 'mac_matches.xlsx' #used to save the results
 no_results = 'mac_noresults.xlsx' 
 variations_file = 'mac_p.xlsx' #source file to make the requests
 
+filter_price = 120 #used to filter matches also by price, no iphone X costs less than 120€, filter other accesories
 
 #get item + color from xlsx list
 def get_target_list():
     item_attribute_list = []
-    wb = load_workbook(filename = variations_file)
+    wb = load_workbook(filename = variations_file) 
     ws = wb.active
 
     for row in ws.iter_rows(values_only=True):
@@ -32,17 +33,19 @@ def get_target_list():
 def make_match_data(item, attribute):
     
     if item:
-        item_p = item.lower()
+        item_p = str(item)
+        item_p = item_p.lower()
         item_p = item_p.replace('(','').replace(')','') #already done in clenaer.py
 
     #sometimes the attribute is an integer, like 2019, can't apply lower()
-    try:
-        if attribute:
-            attribute_p = attribute.lower()
-    except Exception as e:
-        attribute_p = str(attribute)
-        print(e)
-        pass
+    if attribute:
+        try:
+            attribute_p = str(attribute)    
+            attribute_p = attribute_p.lower()
+        except Exception as e:
+            attribute_p = str(attribute)
+            print(e)
+            pass
     #print(item_p,attribute_p)
     return item_p, attribute_p
 
@@ -85,12 +88,14 @@ def get_prod_matches(prods,item_p,attribute_p,query):
         try:
             title = p.find_element_by_xpath('.//div[@class="a-section a-spacing-none a-spacing-top-small"]/h2').text
             title = title.lower()
-            raw_price = p.find_element_by_xpath('.//span[@class="a-price-whole"]').text
-            price = fix_price(raw_price)
-            #print(title)
-
+            try:
+                raw_price = p.find_element_by_xpath('.//span[@class="a-price-whole"]').text
+                price = fix_price(raw_price)
+                #print(title)
+            except:
+                price = 10_000
             #set the minimal price for the items, Example: No iphone costs less than 80€, but there unwanted are accesories
-            min_price = 80
+            min_price = filter_price
             if price < min_price:
                 #print('this -----PRICE----- is too low:',price, title)
                 continue
