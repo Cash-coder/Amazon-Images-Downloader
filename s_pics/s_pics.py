@@ -7,17 +7,16 @@ from time import sleep
 from openpyxl.workbook.workbook import Workbook
 from openpyxl import load_workbook
 
-
-output_file = 'mac_matches.xlsx' #used to save the results
-no_results = 'mac_noresults.xlsx' 
-variations_file = 'mac_p.xlsx' #source file to make the requests
+input_file = 'hp_lap.xlsx' #source file to make the requests
+output_file = 'hp_matches.xlsx' #used to save the results
+no_results = 'hp_noresults.xlsx' 
 
 filter_price = 120 #used to filter matches also by price, no iphone X costs less than 120€, filter other accesories
 
 #get item + color from xlsx list
 def get_target_list():
     item_attribute_list = []
-    wb = load_workbook(filename = variations_file) 
+    wb = load_workbook(filename = input_file) 
     ws = wb.active
 
     for row in ws.iter_rows(values_only=True):
@@ -51,18 +50,22 @@ def make_match_data(item, attribute):
 
 #given the item and the color, make the url to get
 def make_query_url(item,attribute):
-    item = str(item)
-    attribute = str(attribute) #attr sometimes = 2019, can't concatenate
-    
-    query = item + ' ' + attribute
-    #query_t is used later for human reference in the file, with spaces instead of +
-    query_t = item + ' ' + attribute
-    query = query.replace(' ','+')
 
+    if attribute: #sometimes there's no attribute, like "hp 15s" 
+        query = item + ' ' + attribute
+        #query_t is used later for human reference in the file, with spaces instead of +, to know which query it is, 'iphone 12 verde'
+        query_t = item + ' ' + attribute
+        query = query.replace(' ','+')
+        
+    else:
+        query = item
+        query = query.replace(' ','+')
+
+    url = 'https://www.amazon.es/s?k=' + query + '&i=electronics&__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&ref=nb_sb_noss_2'
     #in Amazon all depatartaments URL
     #url = 'https://www.amazon.es/s?k='+ query +'&__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&ref=nb_sb_noss'
     #Electronics URL
-    url = 'https://www.amazon.es/s?k=' + query + '&i=electronics&__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&ref=nb_sb_noss_2'
+    
     return url, query_t
 
 def make_request(url):
@@ -76,7 +79,7 @@ def make_request(url):
         #if the browser opens 2 tabs
         if len(d.window_handles) > 1:
             d.switch_to.window(d.window_handles[1])
-        sleep(2)
+        sleep(3)
         prods = d.find_elements_by_xpath('//div[@data-component-type="s-search-result"]')
         print('founded {} prods'.format(len(prods)))
         return prods
@@ -279,10 +282,10 @@ def write_excel(data_list,query):
 row_2 = 1
 def write_no_results(query):
     global row_2
-    #wb = load_workbook(filename = 'no_results.xlsx')
-    wb = Workbook()
+    #wb = Workbook()
+    wb = load_workbook(filename = no_results)
     ws = wb.active
-    ws.cell(row= row_2,column=1,value=query)
+    ws.cell(row=row_2, column=1, value=query)
     row_2 += 1
     #entry = (query,'something_here')
     #ws.append(entry)
