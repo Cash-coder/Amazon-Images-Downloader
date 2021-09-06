@@ -7,9 +7,9 @@ from time import sleep
 from openpyxl.workbook.workbook import Workbook
 from openpyxl import load_workbook
 
-input_file = 'hp_lap.xlsx' #source file to make the requests
-output_file = 'hp_matches.xlsx' #used to save the results
-no_results = 'hp_noresults.xlsx' 
+input_file = 'lenovo_lap.xlsx' #source file to make the requests
+output_file = 'lenovo_matches.xlsx' #used to save the results
+no_results = 'lenovo_noresults.xlsx' 
 
 filter_price = 120 #used to filter matches also by price, no iphone X costs less than 120€, filter other accesories
 
@@ -24,7 +24,7 @@ def get_target_list():
         attribute = row[1]
         if attribute == None: # phones-tablets with only one color, use a white space to keep the code as it is
             attribute = ' '
-            print('###################This item hasn\'t attribute!!',item)
+            #print('###################This item hasn\'t attribute!!',item)
         item_attribute_list.append({'item':item,'attribute':attribute})
     return item_attribute_list
 

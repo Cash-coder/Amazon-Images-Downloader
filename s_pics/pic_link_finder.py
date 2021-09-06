@@ -10,7 +10,7 @@ from openpyxl.workbook.workbook import Workbook
 
 
 input_file = 'down_urls.xlsx'
-output_file = 'founded_links.xlsx'
+output_file = 'links_founded.xlsx'
 
 #returns a list of dicts with {item , url}
 def extract():
@@ -85,15 +85,17 @@ def raw_request(url):
     return s
 
 n = 1
-def write_file(url_list):
+def write_file(url_list,item):
     global n
-    
-    wb = Workbook()
+
+    wb = load_workbook(filename=output_file)
     ws = wb.active
 
-    for item in url_list:#ws.iter_rows(values_only=True):
+    for url in url_list:#ws.iter_rows(values_only=True):
         ws.cell(row=n, column=1, value=item)
+        ws.cell(row=n, column=2, value=url)
         n += 1
+        wb.save(output_file)
     # with open('URLs.csv','w') as f:
         # fieldnames = ['Title','URL']
         # writer = csv.DictWriter(f,fieldnames=fieldnames)
@@ -110,15 +112,12 @@ def run():
     pass
 
 
-
-
-
-url = 'https://www.amazon.es/s?k='+ query +'&__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&ref=nb_sb_noss'
+#url = 'https://www.amazon.es/s?k='+ query +'&__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&ref=nb_sb_noss'
 #url = 'https://www.amazon.es/Apple-iPhone-64GB-Plata-Reacondicionado/dp/B082DKM8TG/ref=sr_1_3?__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=3L65HJLXS1PD9&dchild=1&keywords=iphine11&qid=1630505792&s=electronics&sprefix=iphi%2Celectronics%2C185&sr=1-3'
     #print(s)
+# query = 'iphone 12 pro grafito'
+# query = query.replace(' ','+')
 
-query = 'iphone 12 pro grafito'
-query = query.replace(' ','+')
 
 targets_list = extract()
 
@@ -133,7 +132,7 @@ for e in targets_list:
     url_list = get_pictures_urls(raw_data)
     #for url in url_list:
         #download_picture(url)
-    write_file(url_list)
+    write_file(url_list,item)
 
 #when all processed, download the links, 
 # title qith the query n+1
