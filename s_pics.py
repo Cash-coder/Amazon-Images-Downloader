@@ -9,10 +9,10 @@ from time import sleep
 from openpyxl.workbook.workbook import Workbook
 from openpyxl import load_workbook
 
-input_file = 'lenovo_lap.xlsx' #source file to make the requests
-output_file = 'lenovo_matches.xlsx' #used to save the results
-no_results = 'lenovo_noresults.xlsx' 
-
+input_file = 'acer_lap.xlsx' #source file to make the requests
+output_file = 'acer_matches.xlsx' #used to save the results
+no_results = 'acer_noresults.xlsx' 
+ 
 filter_price = 120 #used to filter matches also by price, no iphone X costs less than 120€, filter other accesories
 
 #get item + color from xlsx list
@@ -23,7 +23,6 @@ def get_target_list():
 
     for row in ws.iter_rows(values_only=True):
         item = row[0]
-        
         try:
             attribute = row[1]
         except:
