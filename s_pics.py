@@ -317,7 +317,7 @@ def write_no_results(query):
 
 
 target_list = get_target_list()
-for e in target_list[37:38]:
+for e in target_list:
     try:
         #get the data from the list
         item = e.get('item')
