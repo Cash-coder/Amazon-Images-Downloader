@@ -5,7 +5,7 @@ import json
 from openpyxl.workbook.workbook import Workbook 
 
 #wb = Workbook()
-wb = load_workbook('tablets.xlsx')
+wb = load_workbook('phones.xlsx')
 ws = wb.active
 #print("loaded wb----------")
 
@@ -13,75 +13,74 @@ prod_states = 'nuevo','seminuevo'
 variations_list = []
 
 for row in ws.iter_rows(values_only=True):
-#print(row,'---------------------')
-    #identify the values
-    brand = row[1]
-    model = str(row[0])
-    capacity = row[3]
-    colors = row[1]
-    #print(brand,model,capacity,colors)
-    #extract lists like 64GB,128GB,256GB
-    #some phones only have one capacity or color
-    try:
-        colors = colors.split(',')
-        #print(colors)
-    except Exception as e:
-        print(e)
-        pass
-    
-    if colors:
-        for color in colors:
-            variation = model + ' ' + color
-            
-            try:
-                variation = variation.replace(',','')
-                #variation = variation.replace('.0','').replace(',','')
-            except:
-                pass
+    #print(row,'---------------------')
+    if row[0] == 'PHONE':
+        #identify the values
+        brand = row[1]
+        model = str(row[1])
+        capacity = row[3]
+        colors = row[3]
+        #print(brand,model,capacity,colors)
+        #extract lists like 64GB,128GB,256GB
+        #some phones only have one capacity or color
+        try:
+            colors = colors.split(' ')
+            #print(colors)
+        except Exception as e:
+            print(e)
+            pass
+        
+        if colors and colors != ' ':
+            for color in colors:
+                variation = model + ' ' + color
+                # try:
+                #     variation = variation.replace('.0','').replace(',','')
+                # except:
+                #     pass
 
-            #item = brand + ' ' + model
-            variations_list.append({'variation':variation,'item':model,'color':color})
-            print(variation)
-    
+                #item = brand + ' ' + model
+                variations_list.append({'variation':variation,'item':model,'color':color})
+                print(variation)
+        
 
-    # try:
-    #     capacity = capacity.split(' ')
-    #     #print(capacity)
-    #     #If GB not present in capacity, add it
-    #     if 'GB' not in str(capacity):
-    #         capacity_list=[]
-    #         for item in capacity:
-    #             item = item + 'GB'
-    #             capacity_list.append(item)
-    #             #print(item)
-    #         #capacity.clear()
-    #         for item in capacity_list:
-    #             capacity.append(item)
-    #         #print(capacity_list)
-    # except Exception as e:
-    #     print(e)
-    #     pass
+        # try:
+        #     capacity = capacity.split(' ')
+        #     #print(capacity)
+        #     #If GB not present in capacity, add it
+        #     if 'GB' not in str(capacity):
+        #         capacity_list=[]
+        #         for item in capacity:
+        #             item = item + 'GB'
+        #             capacity_list.append(item)
+        #             #print(item)
+        #         #capacity.clear()
+        #         for item in capacity_list:
+        #             capacity.append(item)
+        #         #print(capacity_list)
+        # except Exception as e:
+        #     print(e)
+        #     pass
 
-    # print(model,colors)
-    # try:
-    #     combinations = list(itertools.product(colors,str(model)))#,capacity_list))
-    #     #print(combinations)
+        # print(model,colors)
+        # try:
+        #     combinations = list(itertools.product(colors,str(model)))#,capacity_list))
+        #     #print(combinations)
 
-    #     for combination in combinations:
-    #         #print(combination)
-    #         #combination = list(combination)
-    #         #one variation for nuevo, other for seminuevo
-    #         variation1 = brand + ' ' + combination[1] + ' ' + combination[0]
-    #         #variation2 = brand + ' ' + model + ' ' + combination[1] + ' ' + combination[0] + ' ' + prod_states[1]
-    #         #variation1 = brand + ' ' + model + ' ' + combination[1] + ' ' + combination[0] + ' ' + prod_states[0]
-    #         # print(variation1)
-    #         # print(variation2)
-    #         variations_list.append(variation1)
-    #         #variations_list.append(variation2)
-    # except Exception as e:
-    #     print(e)
-    #     pass
-#avoid blank rows
+        #     for combination in combinations:
+        #         #print(combination)
+        #         #combination = list(combination)
+        #         #one variation for nuevo, other for seminuevo
+        #         variation1 = brand + ' ' + combination[1] + ' ' + combination[0]
+        #         #variation2 = brand + ' ' + model + ' ' + combination[1] + ' ' + combination[0] + ' ' + prod_states[1]
+        #         #variation1 = brand + ' ' + model + ' ' + combination[1] + ' ' + combination[0] + ' ' + prod_states[0]
+        #         # print(variation1)
+        #         # print(variation2)
+        #         variations_list.append(variation1)
+        #         #variations_list.append(variation2)
+        # except Exception as e:
+        #     print(e)
+        #     pass
+    #avoid blank rows
     elif row == None:
         continue
 
@@ -97,9 +96,9 @@ for e in variations_list:
     item = e.get('item')
     color = e.get('color')
 
-    ws2.cell(row=n,column=2).value = item
-    ws2.cell(row=n,column=3).value = color
-    ws2.cell(row=n,column=1).value = variation
+    ws2.cell(row=n,column=1).value = item
+    ws2.cell(row=n,column=2).value = color
+    ws2.cell(row=n,column=3).value = variation
     n +=1
 # for row in ws2.iter_rows():
 #     value = variations_list.pop()   
