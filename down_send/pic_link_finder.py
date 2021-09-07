@@ -36,14 +36,15 @@ def make_query(item):
     query = item.replace(' ', '+')
     return query
 
+n = 0
 def download_picture(url): #To local machine
-    n = 0
+    global n
     pic = requests.get(url)
     file_name = 'Hi_Res_' + str(n) +'.jpg'
-    n += 1
     
-    with open(file_name, 'wb') as f:
+    with open(str(n) + file_name, 'wb') as f:
         f.write(pic.content)
+    n += 1
     
         
 def save_html_response(r):
@@ -132,7 +133,10 @@ for e in targets_list:
     url_list = get_pictures_urls(raw_data)
     #for url in url_list:
         #download_picture(url)
-    write_file(url_list,item)
+    #write_file(url_list,item)
+    for pic in url_list:
+        download_picture(pic)
+
 
 #when all processed, download the links, 
 # title qith the query n+1

@@ -9,9 +9,9 @@ from time import sleep
 from openpyxl.workbook.workbook import Workbook
 from openpyxl import load_workbook
 
-input_file = 'acer_lap.xlsx' #source file to make the requests
-output_file = 'acer_matches.xlsx' #used to save the results
-no_results = 'acer_noresults.xlsx' 
+input_file = 'phones_missing.xlsx' #source file to make the requests
+output_file = '2_phones_matches_2.xlsx' #used to save the results
+no_results = 'phones_noresults.xlsx' 
  
 filter_price = 120 #used to filter matches also by price, no iphone X costs less than 120€, filter other accesories
 
