@@ -14,3 +14,6 @@ m = mega.login(email, password)
 #files = m.get_files()
 details = m.get_user()
 print(details)
+
+folder = m.find('IMAGES')
+m.upload('1Hi_Res_1.jpg', folder[0])
