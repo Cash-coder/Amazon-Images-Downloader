@@ -1,16 +1,20 @@
 #https://pypi.org/project/mega.py/
+from mega import Mega
+import login_file # .py file with MEGA user and password
 from requests_html import HTMLSession
 import requests
 import re
-import csv
-
+from time import sleep
 from requests_html import HTMLSession
 from openpyxl import load_workbook
 from openpyxl.workbook.workbook import Workbook
+import os
 
-
-input_file = 'down_urls.xlsx'
+input_file = 'amazon_list.xlsx'
 output_file = 'links_founded.xlsx'
+errors_file = 'errors.xlsx'
+
+pics_folder =  r'C:/Users/HP EliteBook/OneDrive/A_Miscalaneus/Escritorio/Code/git_folder/images_downloader/down_send/pics_folder/'
 
 #returns a list of dicts with {item , url}
 def extract():
@@ -32,23 +36,58 @@ def extract():
         #     #myList.remove(myList[len(myList)-1])
     return target_list
 
-def make_query(item):
-    query = item.replace(' ', '+')
-    return query
+# def make_query(item):
+#     query = item.replace(' ', '+')
+#     return query
+
+n_errors = 1
+def write_bad_result(item,url):
+    global n_errors
+
+    wb = load_workbook(filename = errors_file)
+    ws = wb.active
+
+    ws.cell(row=n,column=1,value=item)
+    ws.cell(row=n,column=2,value=url)
+
+    n_errors += 1
+
 
 n = 0
-def download_picture(url): #To local machine
+def download_picture(url,item): # Download To local machine
     global n
-    pic = requests.get(url)
-    file_name = 'Hi_Res_' + str(n) +'.jpg'
+    global pics_folder
+    try:
+        pic = requests.get(url)
+
+        if pic.status_code == 200:
+            file_name = item + ' ' + str(n) +'.jpg'
+            file_name = file_name.replace(' ','_')
     
-    with open(str(n) + file_name, 'wb') as f:
-        f.write(pic.content)
-    n += 1
-    
+            try:
+                
+                complete_path = pics_folder + file_name
+                
+                with open(complete_path, 'wb') as f:
+                    f.write(pic.content)
+                n += 1
+            except Exception as e:
+                print(e)
+                print('failed to save this pic',item, url)
+                write_bad_result(item,url)
+        else:
+            write_bad_result(item,url)
+            
+    except Exception as e:
+        print(e)
+        write_bad_result(item,url)
+        save_html_response(pic,item)
+
+
         
-def save_html_response(r):
-    with open('html_response.html','w',encoding='utf-8') as f:
+def save_html_response(r,item):
+    item = item.replace(' ', '_')
+    with open(item + 'response.html','w',encoding='utf-8') as f:
         f.write(r.text)
 
 
@@ -108,6 +147,29 @@ def write_file(url_list,item):
             # n +=1
             # writer.writerow({'Title':title,'URL':item_url})
 
+def send_mega():
+    #crete a list with all the file paths
+    file_list = []
+    for root, dirs, files in os.walk(pics_folder):
+        for file in files:
+            file_path = root + file 
+            file_list.append(file_path)
+
+    #init mega
+    email = login_file.email
+    password = login_file.password
+
+    mega = Mega()
+    m = mega.login(email, password)
+    folder = m.find('IMAGES')
+    #upload files
+    for file in file_list:
+        m.upload(file, folder[0])
+
+def delete():
+    filelist = [ f for f in os.listdir(pics_folder)]#if f.endswith(".bak") ]
+    for f in filelist:
+        os.remove(os.path.join(pics_folder, f))
 
 def run():
     pass
@@ -122,20 +184,26 @@ def run():
 
 targets_list = extract()
 
+
+
 for e in targets_list:
+
     item = e.get('item')
     url = e.get('url')
 
-    query = make_query(item)
-
+    #query = make_query(item)
     raw_data = raw_request(url)
-
     url_list = get_pictures_urls(raw_data)
     #for url in url_list:
         #download_picture(url)
     #write_file(url_list,item)
     for pic in url_list:
-        download_picture(pic)
+        download_picture(pic, item) #item used to set the name
+        sleep(3)
+    
+    send_mega()
+
+    delete()
 
 
 #when all processed, download the links, 
