@@ -10,6 +10,12 @@ from openpyxl import load_workbook
 from openpyxl.workbook.workbook import Workbook
 import os
 
+#init mega
+email = login_file.email
+password = login_file.passw
+
+print(email, password)
+
 input_file = 'amazon_list.xlsx'
 output_file = 'links_founded.xlsx'
 errors_file = 'errors.xlsx'
@@ -99,12 +105,19 @@ def get_pictures_urls(s):
     # large ==  ?
     matches = re.findall(r'hiRes(.*?).jpg',s)
     for match in matches:
+        print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',match)
         if '{' in match:
             url = match.replace('":{"','') + '.jpg'
         else:
             url = match.replace('":"','') + '.jpg'
+        
+        if url == None:
+            print('LOG NULL URL in this s', s)
+            print('-------------------------- s ends here -------------------')
+            continue
+
         url_list.append(url)  
-        print('url findend and appended to list',url) 
+        print(' This url has been findend and appended to list',url) 
     return url_list
 
 def raw_request(url):
@@ -154,10 +167,6 @@ def send_mega():
         for file in files:
             file_path = root + file 
             file_list.append(file_path)
-
-    #init mega
-    email = login_file.email
-    password = login_file.password
 
     mega = Mega()
     m = mega.login(email, password)
