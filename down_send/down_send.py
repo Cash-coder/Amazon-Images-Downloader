@@ -1,4 +1,5 @@
 #https://pypi.org/project/mega.py/
+from subprocess import NORMAL_PRIORITY_CLASS
 from mega import Mega
 import login_file # .py file with MEGA user and password
 from requests_html import HTMLSession
@@ -15,8 +16,8 @@ password = login_file.passw
 
 print(email, password)
 
-input_file = 'amazon_list.xlsx'
-output_file = 'links_founded.xlsx'
+input_file  = 'phones_set.xlsx'
+output_file = 'processed_items.xlsx'
 errors_file = 'errors.xlsx'
 
 #local windows
@@ -49,7 +50,7 @@ def extract():
 #     return query
 
 n_errors = 1
-def write_bad_result(item,url):
+def write_bad_result(url,item='no item appended'):
     global n_errors
 
     wb = load_workbook(filename = errors_file)
@@ -62,9 +63,9 @@ def write_bad_result(item,url):
 
 
 
-def download_picture(url,item): # Download To local machine
+def download_picture(url, item, n): # Download To local machine
+    ''' download from url, name file with item + n'''
     global pics_folder
-    n = 0
     try:
         pic = requests.get(url)
 
@@ -78,7 +79,7 @@ def download_picture(url,item): # Download To local machine
                 
                 with open(complete_path, 'wb') as f:
                     f.write(pic.content)
-                n += 1
+                    print('downloaded this pic: ',file_name)
             except Exception as e:
                 print(e)
                 print('failed to save this pic',item, url)
@@ -99,46 +100,55 @@ def save_html_response(r,item):
         f.write(r.text)
 
 
-def get_pictures_urls(s):
-    
-    ######################
-    tags = r.html.xpath('//div[@data-test="thumb-carousel"]/@style')
-    n = 0
-    for url in tags:
-        url = url.replace('background-image:url(','').replace(');','').replace("'","")
-        print(url)
-
-        r = session.get(url)
-
-        with open('pic'+ str(n) + '.jpg', 'wb') as f:
-            f.write(r.content)
-        n += 1
-        #################################
-
-    #AMAZON
-    # hiRes == High Resolution 
-    # main  ==  ?
-    # large ==  ?
+def get_pictures_urls(url):
+    ''' returns a list with image URL's picks the url from Amazon or Backmarket'''
     url_list = []
-    matches = re.findall(r'hiRes(.*?).jpg',s)
-    for match in matches:
-        print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',match)
-        if '{' in match:
-            url = match.replace('":{"','') + '.jpg'
-        else:
-            url = match.replace('":"','') + '.jpg'
-        
-        if match == None or 'null':
-            print('----- nul or NONE match ', s)
-            print('-------------------------- s ends here -------------------')
-            continue
 
-        url_list.append(url)  
-        print(' This url has been findend and appended to list',url) 
+    headers = {'user-agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36"}
+    session = HTMLSession()
+    r = session.get(url,headers=headers,allow_redirects=True)
+    
+    status = r.status_code
+    if status != 200:
+        print('status code error, status: ',status)
+        write_bad_result(url=url)
+        return
+    
+    # Backmarket image links picker
+    if 'backmarket' in url:
+        tags = r.html.xpath('//div[@data-test="thumb-carousel"]/@style')
+        n = 0
+        for url in tags:
+            url = url.replace('background-image:url(','').replace(');','').replace("'","")
+            print(' This url has been findend and appended to list',url) 
+            url_list.append(url)
+
+    # Amazon image links picker
+    elif 'amazon' in url:
+        tag = r.html.find('script', containing='P.when(\'A\').register("ImageBlockATF", function(A){')
+        s = tag[0].text
+        # hiRes == High Resolution 
+        # main  ==  ?
+        # large ==  ?
+        matches = re.findall(r'hiRes(.*?).jpg', s)
+        for match in matches:
+            if match == None :
+                print('----- founded NONE match in this tag', s)
+                print('-------------------------- tag ends here -------------------')
+                continue
+            
+            if '{' in match:
+                url = match.replace('":{"','') + '.jpg'
+            else:
+                url = match.replace('":"','') + '.jpg'
+
+            url_list.append(url)  
+            print(' This url has been findend and appended to list',url) 
+    
     return url_list
 
 def raw_request(url):
-
+    ''' unused, testing new get_pictures_urls() to delete this old func'''
     headers = {'user-agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36"}
     session = HTMLSession()
 
@@ -193,6 +203,7 @@ def send_mega():
     #upload files
     for file in file_list:
         m.upload(file, folder[0])
+        print('uploaded to mega this file: ', file)
 
 def delete():
     '''deletes all the files in pics_folder, to declutter it'''
@@ -209,18 +220,20 @@ def run():
         url = e.get('url')
 
         #query = make_query(item)
-        raw_data = raw_request(url)
+        #raw_data = raw_request(url)
 
-        url_list = get_pictures_urls(raw_data)
+        url_list = get_pictures_urls(url)
         #for url in url_list:
             #download_picture(url)
         #write_file(url_list,item)  
+        n_name = 0 # used to name the downloads, iphone_verde_1, verde_2....
         for pic in url_list:
-            if pic == None or 'null':
-                print('in run loop, founded None/null url')
+            if pic == None :
+                print('in run loop, founded None url')
                 continue
 
-            download_picture(pic, item) #item used to set the name
+            download_picture(pic, item,n_name) #item used to set the name
+            n_name += 1
             sleep(3)
         
         send_mega()

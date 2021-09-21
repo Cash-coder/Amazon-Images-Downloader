@@ -1,11 +1,15 @@
 from openpyxl import load_workbook
 from openpyxl.workbook.workbook import Workbook
 
+''' this code takes a excel with values marked with an X, 
+and take those values to a new excel only if the value is unique, note repeated'''
+
 input_file = 'phones_matches.xlsx'
-output_file = 'amazon_list.xlsx'
+output_file = 'phones_set.xlsx'
 
 
 def extract():
+    ''' reads input file and create a dict with item and url,only unique URL's'''
     wb = load_workbook(filename = input_file)
     ws = wb.active
 
@@ -18,7 +22,7 @@ def extract():
         if match != None:
             match = match.lower()
 
-        if match == 'x' and item not in burned_list and 'amazon' in url:
+        if match == 'x' and item not in burned_list :#and 'amazon' in url:
             print(item)
             entry = {'item':item, 'url':url}
             target_list.append(entry)
@@ -29,6 +33,7 @@ def extract():
 
 n = 1
 def write_file(url_list):
+    ''' writes the list into a new excel file, this time only with unique values'''
     global n
 
     wb = load_workbook(filename=output_file)
@@ -47,9 +52,9 @@ def write_file(url_list):
 
 def run():
 
-    amazon_list = extract()
+    set_list = extract()
 
-    write_file(amazon_list)
+    write_file(set_list)
 
 
 if __name__ == "__main__":
