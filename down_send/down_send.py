@@ -1,5 +1,4 @@
 #https://pypi.org/project/mega.py/
-from subprocess import NORMAL_PRIORITY_CLASS
 from mega import Mega
 import login_file # .py file with MEGA user and password
 from requests_html import HTMLSession
