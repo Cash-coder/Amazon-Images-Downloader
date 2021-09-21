@@ -5,7 +5,6 @@ from requests_html import HTMLSession
 import requests
 import re
 from time import sleep
-from requests_html import HTMLSession
 from openpyxl import load_workbook
 from openpyxl.workbook.workbook import Workbook
 import os
@@ -20,7 +19,10 @@ input_file = 'amazon_list.xlsx'
 output_file = 'links_founded.xlsx'
 errors_file = 'errors.xlsx'
 
+#local windows
 pics_folder =  r'C:/Users/HP EliteBook/OneDrive/A_Miscalaneus/Escritorio/Code/git_folder/images_downloader/down_send/pics_folder/'
+#server
+#pics_folder = '/home/nonroot/pics/s_pics/down_send/pics_folder/'
 
 #returns a list of dicts with {item , url}
 def extract():
@@ -53,16 +55,16 @@ def write_bad_result(item,url):
     wb = load_workbook(filename = errors_file)
     ws = wb.active
 
-    ws.cell(row=n,column=1,value=item)
-    ws.cell(row=n,column=2,value=url)
+    ws.cell(row=n_errors,column=1,value=item)
+    ws.cell(row=n_errors,column=2,value=url)
 
     n_errors += 1
 
 
-n = 0
+
 def download_picture(url,item): # Download To local machine
-    global n
     global pics_folder
+    n = 0
     try:
         pic = requests.get(url)
 
@@ -98,11 +100,26 @@ def save_html_response(r,item):
 
 
 def get_pictures_urls(s):
-    url_list = []
     
+    ######################
+    tags = r.html.xpath('//div[@data-test="thumb-carousel"]/@style')
+    n = 0
+    for url in tags:
+        url = url.replace('background-image:url(','').replace(');','').replace("'","")
+        print(url)
+
+        r = session.get(url)
+
+        with open('pic'+ str(n) + '.jpg', 'wb') as f:
+            f.write(r.content)
+        n += 1
+        #################################
+
+    #AMAZON
     # hiRes == High Resolution 
     # main  ==  ?
     # large ==  ?
+    url_list = []
     matches = re.findall(r'hiRes(.*?).jpg',s)
     for match in matches:
         print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',match)
@@ -111,8 +128,8 @@ def get_pictures_urls(s):
         else:
             url = match.replace('":"','') + '.jpg'
         
-        if url == None:
-            print('LOG NULL URL in this s', s)
+        if match == None or 'null':
+            print('----- nul or NONE match ', s)
             print('-------------------------- s ends here -------------------')
             continue
 
@@ -137,17 +154,18 @@ def raw_request(url):
 
     return s
 
-n = 1
+n_write = 1
 def write_file(url_list,item):
-    global n
+    '''write when action performed without errors'''
+    global n_write
 
     wb = load_workbook(filename=output_file)
     ws = wb.active
 
     for url in url_list:#ws.iter_rows(values_only=True):
-        ws.cell(row=n, column=1, value=item)
-        ws.cell(row=n, column=2, value=url)
-        n += 1
+        ws.cell(row=n_write, column=1, value=item)
+        ws.cell(row=n_write, column=2, value=url)
+        n_write += 1
         wb.save(output_file)
     # with open('URLs.csv','w') as f:
         # fieldnames = ['Title','URL']
@@ -161,6 +179,7 @@ def write_file(url_list,item):
             # writer.writerow({'Title':title,'URL':item_url})
 
 def send_mega():
+    ''' send all files from pics_folder to mega'''
     #crete a list with all the file paths
     file_list = []
     for root, dirs, files in os.walk(pics_folder):
@@ -176,62 +195,39 @@ def send_mega():
         m.upload(file, folder[0])
 
 def delete():
+    '''deletes all the files in pics_folder, to declutter it'''
     filelist = [ f for f in os.listdir(pics_folder)]#if f.endswith(".bak") ]
     for f in filelist:
         os.remove(os.path.join(pics_folder, f))
 
 def run():
-    pass
+    targets_list = extract() #get items and url's from excel file
 
+    for e in targets_list:
 
-#url = 'https://www.amazon.es/s?k='+ query +'&__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&ref=nb_sb_noss'
-#url = 'https://www.amazon.es/Apple-iPhone-64GB-Plata-Reacondicionado/dp/B082DKM8TG/ref=sr_1_3?__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=3L65HJLXS1PD9&dchild=1&keywords=iphine11&qid=1630505792&s=electronics&sprefix=iphi%2Celectronics%2C185&sr=1-3'
-    #print(s)
-# query = 'iphone 12 pro grafito'
-# query = query.replace(' ','+')
+        item = e.get('item')
+        url = e.get('url')
 
+        #query = make_query(item)
+        raw_data = raw_request(url)
 
-targets_list = extract()
+        url_list = get_pictures_urls(raw_data)
+        #for url in url_list:
+            #download_picture(url)
+        #write_file(url_list,item)  
+        for pic in url_list:
+            if pic == None or 'null':
+                print('in run loop, founded None/null url')
+                continue
 
+            download_picture(pic, item) #item used to set the name
+            sleep(3)
+        
+        send_mega()
 
-
-for e in targets_list:
-
-    item = e.get('item')
-    url = e.get('url')
-
-    #query = make_query(item)
-    raw_data = raw_request(url)
-    url_list = get_pictures_urls(raw_data)
-    #for url in url_list:
-        #download_picture(url)
-    #write_file(url_list,item)
-    for pic in url_list:
-        download_picture(pic, item) #item used to set the name
-        sleep(3)
-    
-    send_mega()
-
-    delete()
-
-
-#when all processed, download the links, 
-# title qith the query n+1
-# send to mega
-#Gustavo review 50 by 50 HOW MARK THE MISSING ONES ?
-# upload the images files or the image url's of mega to prod_db
-# prod color pictures
+        delete()
 
 
 
-############### Maybe useful code later: ################
-#save_html_response(r)
-
-#soup = bs4(r.text, 'lxml')
-#soup = bs4(r.content, 'lxml')
-#soup = bs4(tag[0].text,'lxml')
-
-#line of code to identify element with the pictures
-'''
-P.when('A').register("ImageBlockATF", function(A){
-'''
+if __name__ == "__main__":
+    run()
