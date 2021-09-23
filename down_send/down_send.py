@@ -58,6 +58,8 @@ def write_bad_result(url,item='no item appended'):
     ws.cell(row=n_errors,column=1,value=item)
     ws.cell(row=n_errors,column=2,value=url)
 
+    wb.save(errors_file)
+
     n_errors += 1
 
 
@@ -131,9 +133,12 @@ def get_pictures_urls(url):
         # large ==  ?
         matches = re.findall(r'hiRes(.*?).jpg', s)
         for match in matches:
+            print(match,'\n')
             if match == None :
-                print('----- founded NONE match in this tag', s)
-                print('-------------------------- tag ends here -------------------')
+                print('founded NONE mathc, this match', match)
+                continue
+            elif ':null,"thumb":' in match :
+                print('founded NULL match, this :', match)
                 continue
             
             if '{' in match:
