@@ -8,25 +8,22 @@ password = login_file.password
 pics_folder =  r'C:/Users/HP EliteBook/OneDrive/A_Miscalaneus/Escritorio/Code/git_folder/images_downloader/down_send/pics_folder/'
 
 def send_mega():
-    #crete a list with all the file names
+    #crete a list with all the file paths
     file_list = []
     for root, dirs, files in os.walk(pics_folder):
         for file in files:
             file_path = root + file 
-
             file_list.append(file_path)
 
+    #init mega
     email = login_file.email
     password = login_file.password
 
     mega = Mega()
     m = mega.login(email, password)
     folder = m.find('IMAGES')
-
-   
-
+    #upload files
     for file in file_list:
-        print(file)
         m.upload(file, folder[0])
 
     

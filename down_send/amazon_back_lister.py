@@ -1,11 +1,12 @@
+from typing import Type
 from openpyxl import load_workbook
 from openpyxl.workbook.workbook import Workbook
 
 ''' this code takes a excel with values marked with an X, 
 and take those values to a new excel only if the value is unique, note repeated'''
 
-input_file = 'phones_matches.xlsx'
-output_file = 'phones_set.xlsx'
+input_file = 'phones_noresults.xlsx'
+output_file = 'phones_noresults_set.xlsx'
 
 
 def extract():
@@ -14,20 +15,30 @@ def extract():
     ws = wb.active
 
     target_list = []
-    burned_list = []
+    burned_list = [] #append here already processed items to avoid process them twice
     for row in ws.iter_rows(values_only=True):
         item = row[0]
-        url = row[4]
-        match = row[3]
-        if match != None:
-            match = match.lower()
-
-        if match == 'x' and item not in burned_list :#and 'amazon' in url:
-            print(item)
-            entry = {'item':item, 'url':url}
-            target_list.append(entry)
-            burned_list.append(item)
-
+        url = row[1]
+        #match = row[2]
+        # if match != None:
+        #     match = match.lower()
+        try:
+            #if url == 'x' and item not in burned_list :#and 'amazon' in url:
+            if 'amazon' in url:
+                print('amazon',item)
+                entry = {'item':item, 'url':url}
+                target_list.append(entry)
+                burned_list.append(item)
+            elif 'backmarket' in url:
+                print('backmarket',item)
+                entry = {'item':item, 'url':url}
+                target_list.append(entry)
+                burned_list.append(item)
+            else:
+                continue
+        except TypeError: #blank url
+            print('TypeError probably blank URL catched!')
+            continue
     return target_list
 
 
