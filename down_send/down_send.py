@@ -22,9 +22,9 @@ output_file = 'processed_items.xlsx'
 errors_file = 'errors.xlsx'
 
 #local windows
-pics_folder =  r'C:/Users/HP EliteBook/OneDrive/A_Miscalaneus/Escritorio/Code/git_folder/images_downloader/down_send/pics_folder/'
+#pics_folder =  r'C:/Users/HP EliteBook/OneDrive/A_Miscalaneus/Escritorio/Code/git_folder/images_downloader/down_send/pics_folder/'
 #server
-#pics_folder = '/home/nonroot/pics/s_pics/down_send/pics_folder/'
+pics_folder = '/home/nonroot/pics/down_send/pics_folder/'
 
 #returns a list of dicts with {item , url}
 def extract():
@@ -52,6 +52,7 @@ def extract():
 
 n_errors = 1
 def write_bad_result(url,item='no item appended'):
+    ''' URL ITEM'''
     global n_errors
 
     wb = load_workbook(filename = errors_file)
@@ -95,7 +96,7 @@ def download_picture(url, item, n): # Download To local machine
             
     except Exception as e:
         print(e)
-        save_html_response(pic,item)
+        #save_html_response(pic,item)
         write_bad_result(item,url)
 
 
@@ -113,13 +114,21 @@ def get_pictures_urls(url,item):
 
         headers = {'user-agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36"}
         session = HTMLSession()
-        r = session.get(url,headers=headers,allow_redirects=True)
-
-        status = r.status_code
-        if status != 200:
-            print('status code error, status: ',status)
-            write_bad_result(url, item)
-            return 'request error'
+        retries = 0
+        while retries < 4:
+            r = session.get(url,headers=headers,allow_redirects=True)
+            status = r.status_code
+            if status == 503:
+                print('status code 503, going to retry, URL: ', url)
+                print('this was the n {} retry'.format(retries))
+                retries += 1
+                sleep(1)
+            elif status != 200:
+                print('status code error, status: ',status,' URL:  ', url)
+                write_bad_result(url=url,item=item)
+                #return 'request error'
+            elif status == 200:
+                pass
 
         # Backmarket image links picker
         if 'backmarket' in url:
@@ -160,22 +169,20 @@ def get_pictures_urls(url,item):
     except Exception as e:
         print('error in get_pictures_url()')
         print(e)
-        traceback.print_exc()
         return 'request error'
 
 n_write = 1
-def write_file(url_list,item):
+def write_file(item):
     '''write when action performed without errors'''
     global n_write
 
     wb = load_workbook(filename=output_file)
     ws = wb.active
-
-    for url in url_list:#ws.iter_rows(values_only=True):
-        ws.cell(row=n_write, column=1, value=item)
-        ws.cell(row=n_write, column=2, value=url)
-        n_write += 1
-        wb.save(output_file)
+    
+    ws.cell(row=n_write, column=1, value=item)
+       
+    n_write += 1
+    wb.save(output_file)
     # with open('URLs.csv','w') as f:
         # fieldnames = ['Title','URL']
         # writer = csv.DictWriter(f,fieldnames=fieldnames)
@@ -233,6 +240,9 @@ def run():
             #raw_data = raw_request(url)
 
             url_list = get_pictures_urls(url,item)
+            if url_list == 'request error':
+                print('request error with this item {} and this url {} continue to next'.format(item,url))
+                continue
             #for url in url_list:
                 #download_picture(url)
             #write_file(url_list,item)  
@@ -249,11 +259,10 @@ def run():
             send_mega()
 
             delete()
-        except Exception as e:
-            print('error in run loop:')
-            print(e)
-            traceback.print_exc()
 
+        except Exception as e:
+            print('error in run loop:', e)
+            #traceback.print_exc()
             continue
 
 
