@@ -14,17 +14,23 @@ import traceback
 #init mega
 email = login_file.email
 password = login_file.passw
+print('got mega credentials')
 
-print(email, password)
-
-input_file  = 'phones_set.xlsx'
+machine = 'windows' #server
+input_file  = 'phones_noresults_set.xlsx'
 output_file = 'processed_items.xlsx'
 errors_file = 'errors.xlsx'
 
-#local windows
-#pics_folder =  r'C:/Users/HP EliteBook/OneDrive/A_Miscalaneus/Escritorio/Code/git_folder/images_downloader/down_send/pics_folder/'
-#server
-pics_folder = '/home/nonroot/pics/down_send/pics_folder/'
+#setting pics file path
+def set_path(machine):
+    if machine == 'windows' : pics_folder = r'C:/Users/HP EliteBook/OneDrive/A_Miscalaneus/Escritorio/Code/git_folder/images_downloader/down_send/pics_folder/'
+    elif machine == 'server': pics_folder = '/home/nonroot/pics/down_send/pics_folder/'
+    return pics_folder
+
+
+pics_folder = set_path(machine)
+
+
 
 #returns a list of dicts with {item , url}
 def extract():
@@ -44,6 +50,7 @@ def extract():
         #     item_p = chain.remove(chain[-2])
         #     print(item_p)
         #     #myList.remove(myList[len(myList)-1])
+    print('extracted excel')
     return target_list
 
 # def make_query(item):
@@ -78,6 +85,8 @@ def download_picture(url, item, n): # Download To local machine
         if pic.status_code == 200:
             file_name = item + ' ' + str(n) +'.jpg'
             file_name = file_name.replace(' ','_')
+            #some items has / in the name: like iphone 12 negro/grafito
+            if '/' in file_name : file_name = file_name.replace('/','&')
     
             try:
                 
@@ -91,7 +100,7 @@ def download_picture(url, item, n): # Download To local machine
                 print('failed to save this pic',item, url)
                 write_bad_result(item, url)
         else:
-            print('status code {} for this url: {}'.format(pic.status_code, url))
+            print('status code for this picture (not item) is {} for this url: {}'.format(pic.status_code, url))
             write_bad_result(item, url)
             
     except Exception as e:
@@ -118,6 +127,7 @@ def get_pictures_urls(url,item):
         while retries < 4:
             r = session.get(url,headers=headers,allow_redirects=True)
             status = r.status_code
+            print(status,url)
             if status == 503:
                 print('status code 503, going to retry, URL: ', url)
                 print('this was the n {} retry'.format(retries))
@@ -126,9 +136,9 @@ def get_pictures_urls(url,item):
             elif status != 200:
                 print('status code error, status: ',status,' URL:  ', url)
                 write_bad_result(url=url,item=item)
-                #return 'request error'
+                return 'request error'
             elif status == 200:
-                pass
+                break
 
         # Backmarket image links picker
         if 'backmarket' in url:
@@ -230,7 +240,6 @@ def delete():
 
 def run():
     targets_list = extract() #get items and url's from excel file
-
     for e in targets_list:
         try:
             item = e.get('item')
