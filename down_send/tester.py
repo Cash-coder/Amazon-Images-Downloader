@@ -10,38 +10,39 @@ from openpyxl import load_workbook
 from openpyxl.workbook.workbook import Workbook
 import os
 import traceback
+import login_file # .py file with MEGA user and password
+import logging
+
+from logging import getLoggerClass, addLevelName, setLoggerClass, NOTSET
+
+VERBOSE = 5
+
+class MyLogger(getLoggerClass()):
+    def __init__(self, name, level=NOTSET):
+        super().__init__(name, level)
+
+        addLevelName(VERBOSE, "VERBOSE")
+
+    def verbose(self, msg, *args, **kwargs):
+        if self.isEnabledFor(VERBOSE):
+            self._log(VERBOSE, msg, args, **kwargs)
+
+setLoggerClass(MyLogger)
+
+logging.Logger.Mylogger('is this working?')
+
+# DEBUG_LEVELV_NUM = 9 
+# logging.addLevelName(DEBUG_LEVELV_NUM, "MYLOG")
+# logging.basicConfig(level=logging.MYLOG)
+
+# logging.mylog('got mega credentials')
 
 
-# ip_proxy0 = '193.43.119.41'
-# ip_proxy1 = '193.43.119.3'
-# ip_proxy2 = '5.188.183.221'
-# ip_proxy3 = '5.188.181.86'
+# DEBUG_LEVELV_NUM = 9 
+# logging.addLevelName(DEBUG_LEVELV_NUM, "DEBUGV")
+# def debugv(self, message, *args, **kws):
+#     # Yes, logger takes its '*args' as 'args'.
+#     self._log(DEBUG_LEVELV_NUM, message, args, **kws) 
+# logging.Logger.debugv = debugv
 
-
-
-# proxy_list = ['193.43.119.41',
-#               '193.43.119.3',
-#               '5.188.183.221',
-#               '5.188.181.86']
-# # BUG in URLLIB YOU HAVE TO DOWNGRADE URLLIB:  pip install urllib3==1.25.8
-# port = '34512'
-# user = 'vadymkozak3S7'
-# password = 'D9m2IkU'
-
-# session = HTMLSession()
-# for proxy_ip in proxy_list:
-#     #proxy = 'http://username:password@ip:port'
-#     proxy = 'https://'+ user +':'+ password +'@'+ proxy_ip +':'+ port
-#     r = session.get(url, proxies={ 'http':proxy })#proxies={ 'http':proxy,'https':proxy})
-
-l = ['a', 2 , 2]
-
-for n in l:
-    try:
-        n + 1
-    except TypeError as e:
-        print('n1')
-    except Exception as e:
-        print('n2')
-        print(e)
-        print(Exception.traceback)
+# logging.Logger('printed in screen and txt file')

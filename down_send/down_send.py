@@ -16,6 +16,7 @@ import logging
 
 
 #logging.basicConfig(level=logging.INFO)
+# logging.info('got mega credentials')
 # debug
 # info
 # warning
@@ -33,12 +34,11 @@ def set_path(machine):
 email = login_file.email
 password = login_file.passw
 logging.info('got mega credentials')
-# print()
 
-machine = 'windows' #server
-input_file  = 'phones_set.xlsx'
-output_file = 'processed_items.xlsx'
-errors_file = 'errors.xlsx'
+machine = 'windows' # 'server' or 'windows'
+input_file  = 'set_laptops_mac.xlsx'
+output_file = 'processed_laptops_mac.xlsx'
+errors_file = 'errors_laptops_mac.xlsx'
 
 pics_folder = set_path(machine)
 errors_folder = 'errors_mega_uploads'
@@ -66,9 +66,6 @@ def extract():
     logging.info('extracted excel')
     return target_list
 
-# def make_query(item):
-#     query = item.replace(' ', '+')
-#     return query
 
 n_errors = 1
 def write_bad_result(url,item='no item appended'):
@@ -86,14 +83,10 @@ def write_bad_result(url,item='no item appended'):
     print('written bad result', item)
 
 
-
 def download_picture(url, item, n): # Download To local machine
     global pics_folder
     try:
         pic = proxy_request(url, item) 
-        # headers = {'user-agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36"}
-        # session = HTMLSession()
-        # pic = session.get(url,headers=headers,allow_redirects=True)
         
         if pic.status_code == 200:
             file_name = item + ' ' + str(n) +'.jpg'
@@ -124,43 +117,45 @@ def download_picture(url, item, n): # Download To local machine
 
 
         
-def save_html_response(r,item):
+def save_html_response(r, item='-'):
     item = item.replace(' ', '_')
     with open(item + 'response.html','w',encoding='utf-8') as f:
         f.write(r.text)
 
 
-def get_pictures_urls(url,item, r):
+def get_pictures_urls(url, r):
     ''' returns a list with image URL's picks the url from Amazon or Backmarket'''
     try:
         url_list = []
-        #r = proxy_request(url,item)
-        #used to continue in run() loop
         if r == 'request error':
             return 'request error'
 
         # Backmarket image links picker
         if 'backmarket' in url:
-            tags = r.html.xpath('//div[@data-test="thumb-carousel"]/@style')
-            n = 0
+            tags = r.html.xpath('//div[@class="flex justify-center md:hidden"]/div/div/ul/li/img')
+            search_pattern = r'https(.*?).jpg'
+            for tag in tags:
+                # print(tag)
+                url = re.search(search_pattern, str(tag))
+                # print(url)
+                if url != None:
+                    url = url.group()
+                    url_list.append(url)
+                else: 
+                    print('no match in this regex, url: ', url)
+                    continue
+
 
             #used to log the process
-            total_pics = len(r.html.xpath('//div[@class="thumb image-t"]')) #measured by the number of thumbnail pictures in prod page
-            total_pics += 1 # in backmarket active pic has another thumbanil class
+            total_pics = len(r.html.xpath('//div[@class="hidden md:block"]//descendant::ul/li')) #measured by the number of thumbnail pictures in prod page
+            total_pics = total_pics / 2 # trick to get exact number
+            total_pics = int(total_pics) # trick to get exact number
             #print(f'item: {item}; total pics: {total_pics}; ')
 
-            for url in tags:
-                url = url.replace('background-image:url(','').replace(');','').replace("'","")
-                #print(' This url has been findend and appended to list',url) 
-                url_list.append(url)
         # Amazon image links picker
         elif 'amazon' in url:
             tag = r.html.find('script', containing='P.when(\'A\').register("ImageBlockATF", function(A){')
             s = tag[0].text
-
-            #used to log the process
-            # test = r.html.xpath('//div[@class="a-fixed-left-grid"]')[0].html#[0].get_attribute('innerHTML')
-            # print('this is test file', test)
 
             total_pics = r.html.xpath('//li[@class="a-spacing-small item imageThumbnail a-declarative"]') #measured by the number of thumbnail pictures in prod page
             total_pics = len(r.html.xpath('//span[@class="a-button a-button-thumbnail a-button-toggle"]/span[@class="a-button-inner"]/input')) #measured by the number of thumbnail pictures in prod page
@@ -282,7 +277,7 @@ def proxy_request(url, item):
 
 n_write = 1
 def write_processed_item(item,item_link):
-    '''write when action performed without errors'''
+    '''item, item_link // write when action performed without errors'''
     global n_write
 
     wb = load_workbook(filename=output_file)
@@ -305,10 +300,10 @@ def write_processed_item(item,item_link):
             # writer.writerow({'Title':title,'URL':item_url})
 
 
-def send_mega(item_name, url, total_pics, finded_urls):
+def send_mega(url, total_pics, item):
     ''' send all files from pics_folder to mega'''
     try:
-        #crete a list with all the file paths
+        #crete a list with all the pics file paths
         file_list = []
         for root, dirs, files in os.walk(pics_folder):
             for file in files:
@@ -325,30 +320,37 @@ def send_mega(item_name, url, total_pics, finded_urls):
             while retries < 4:
                 try:
                     #m.upload(file, folder[0])
-                    file = m.upload(picture, folder[0])
-                    mega_file_link = m.get_upload_link(file) 
+                    upload = m.upload(picture, folder[0])
+                    mega_file_link = m.get_upload_link(upload) 
                     uploaded_pics += 1
-                    write_processed_item(item_name,mega_file_link)
+                    write_processed_item(picture, mega_file_link)
                     #print('uploaded to mega this file: ', item_name)
                     break
                 except Exception as e: #'json.decoder.JSONDecodeError'
+                    print(f'Exception in send_mega(): {traceback.print_exc()}')
                     retries += 1
                     if retries == 4: 
-                        write_bad_result(url, item_name)
-                        print(f'couldn\'t upload this file to mega {item_name}')
+                        # retries = 0
+                        write_bad_result(url, file)
+                        print(f'couldn\'t upload this file to mega {file}')
                         
                         #move the file to a subfloder to avoid delete it and have to download it again later
                         try:
-                            current_pic_path = pics_folder + '/' + item_name
+                            print('trying to move pics to errors folder')
+                            current_pic_path = pics_folder + '/' + file
                             new_path = pics_folder + '/' + errors_folder
                             shutil.move(current_pic_path, new_path)
                         except Exception as e:
                             print('coulnd\'t move the file to new folder')
                             print(e)
-        print(f'--log_record: {item_name}-{total_pics}-{finded_urls}-{uploaded_pics} - // total-finded-uploaded')
+
+        #print(f'--log_record: {item_name}- {total_pics}---{uploaded_pics} - // total-uploaded')
+        #print with formated fields to even space the print
+        # print(f'--log_record: {item:30s}{int(total_pics):4.1f}--{int(uploaded_pics):4.2f}')
+        print(f'--log_record: {item:30s}{total_pics:4.1f}--{uploaded_pics:4.2f}')
     except Exception as e:
         print('-------------------error while uploading files to mega-------------')
-        print(e)
+        print(f'this item <{file}>', e)
         traceback.print_exc()
         
 
@@ -359,6 +361,7 @@ def delete():
         for f in filelist:
             os.remove(os.path.join(pics_folder, f))
     except Exception as e:
+        print('error in delete()')
         print(e)
         pass
 
@@ -374,10 +377,6 @@ def run():
                 print('not this one!')
                 write_bad_result(url, item)
                 continue
-            # elif 'backmarket' not in url:
-            #     print('not this one!')
-            #     write_bad_result(url, item)
-            #     continue
 
             r = proxy_request(url, item)
 
@@ -385,10 +384,10 @@ def run():
                 logging.debug('request error in proxy_request()')
                 continue
             
-            data = get_pictures_urls(url, item, r)
+            data = get_pictures_urls(url, r)
+
             url_list = data.get('url_list')
             total_pics = data.get('total_pics')
-            finded_urls = data.get('finded_urls')
             
             if url_list == 'request error':
                 print('request error with this item {} and this url {} continue to next'.format(item,url))
@@ -403,7 +402,7 @@ def run():
                 download_picture(pic, item, n_name) #item used to set the name
                 n_name += 1
                 sleep(3)
-            send_mega(item, url, total_pics, finded_urls)#only URL needed, the rest used for logging
+            send_mega(url, total_pics, item)#only URL needed, the rest used for logging
 
             delete()
 

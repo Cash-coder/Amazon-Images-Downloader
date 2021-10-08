@@ -5,8 +5,8 @@ from openpyxl.workbook.workbook import Workbook
 ''' this code takes a excel with values marked with an X, 
 and take those values to a new excel only if the value is unique, note repeated'''
 
-input_file = '2_phones_matches_2.xlsx'
-output_file = '2_phonesMatches_set.xlsx'
+input_file = 'matches_laptops_mac.xlsx'
+output_file = 'set_laptops_mac.xlsx'
 
 
 def extract():
@@ -18,17 +18,24 @@ def extract():
     burned_list = [] #append here already processed items to avoid process them twice
     for row in ws.iter_rows(values_only=True):
         item = row[0]
-        url = row[3]
-        match = row[2]
-        if match != None:
-            match = match.lower()
+        property = row[1]
+        url = row[2]
         
-        try:
-            if match == 'x' and item not in burned_list :#and 'amazon' in url:
-                print(item)
-                entry = {'item':item, 'url':url}
-                target_list.append(entry)
-                burned_list.append(item)
+        prod_title = item + ' ' + str(int(property))
+        entry = {'item':prod_title, 'url':url}
+        target_list.append(entry)
+        #match = row[2]
+        # if match != None:
+        #     match = match.lower()
+        
+        # try:
+        #     if match == 'x' and item not in burned_list :#and 'amazon' in url:
+        #         print(item)
+        #         entry = {'item':item, 'url':url}
+        #         target_list.append(entry)
+        #         burned_list.append(item)
+
+
             # if 'amazon' in url:
             #     print('amazon',item)
             #     entry = {'item':item, 'url':url}
@@ -41,9 +48,10 @@ def extract():
             #     burned_list.append(item)
             # else:
             #     continue
-        except TypeError: #blank url
-            print('TypeError probably blank URL catched!')
-            continue
+        
+        # except TypeError: #blank url
+        #     print('TypeError probably blank URL catched!')
+        #     continue
     return target_list
 
 
